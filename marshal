@@ -46,7 +46,6 @@ def scan():
         last_brace = list();
         curr_list = list();
         for tok in tokens:
-            #print(f"tok: {tok} | grouped: {grouped} | curr_list: {curr_list}")
             if tok == '}':
                 grouped += [curr_list];
                 curr_list = grouped;
@@ -57,13 +56,13 @@ def scan():
                 curr_list += [tok]
 
 
-        return grouped + curr_list;
+        return grouped;
 
     def make_sentences(lists):
         sentences = list();
         sentence = list();
         for el in lists:
-            if type(el) == list:
+            if isinstance(el, list):
                 sentence += [make_sentences(el)]
             else:
                 if el == ';':
@@ -81,7 +80,8 @@ def scan():
     text = text.replace(';', ' ; ');
     sentences = text.split(' ')
     sentences = [s for s in sentences if s != '']
-    return make_sentences(group_braces(sentences));
+    sentences = group_braces(sentences);
+    return make_sentences(sentences);
 
 def compile_stmt(stmt):
     def compile_basic_stmt(stmt):
@@ -156,7 +156,6 @@ def compile_stmt(stmt):
 def main():
     """ main compiler routine """
     stmts = scan();
-    print(stmts)
     header = '// these are the headers\n\n'
     code   = '// this is the implementation\n\n'
     for stmt in stmts:
