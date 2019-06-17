@@ -85,6 +85,9 @@ def scan():
 
 def compile_stmt(stmt):
     def compile_basic_stmt(stmt):
+        if stmt[0] == 'typedef':
+            return ' '.join(stmt) + ';\n\n', '';
+
         typename_ = '_'.join(stmt);
         typename = ' '.join(stmt);
         header  = '// adds the corresponding bytes to the buffer, advancing the pointer; fails if there isn\'t enough space\n'
