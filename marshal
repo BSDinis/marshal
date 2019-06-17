@@ -48,14 +48,14 @@ def scan():
         for tok in tokens:
             if tok == '}':
                 grouped += [curr_list];
-                curr_list = grouped;
+                curr_list = [];
             elif tok == '{':
                 grouped += curr_list
-                curr_list = list();
+                curr_list = [];
             else:
-                curr_list += [tok]
+                curr_list += [tok];
 
-
+        if curr_list: grouped += curr_list
         return grouped;
 
     def make_sentences(lists):
@@ -119,32 +119,58 @@ def compile_stmt(stmt):
         return (header, code);
 
     def compile_struct(stmt):
-        header = str();
-        if stmt[0] != 'typedef': header += 'typedef ';
-        for top_level in stmt:
-            if isinstance(top_level, list):
-                header += '\n{\n';
-                for sub_stmt in top_level:
-                    header += '  ' + ' '.join(sub_stmt) + ';\n';
-                header += '} ';
-            else:
-                header += top_level + ' ';
-        if stmt[0] != 'typedef':
-            state = 0
-            for top_level in stmt:
-                if state == 0:
-                    if top_level == 'struct': state = 1
+        def analyse_struct(stmt):
+            struct = dict();
+            offset = 0;
+            if stmt[0] == 'typedef':
+                offset += 1
+                if isinstance(stmt[-1], str):
+                    struct['typedef'] = stmt[-1]
                 else:
-                    if isinstance(top_level, list): break;
-                    else: header += top_level + ' ';
-        header += ';\n';
+                    raise SyntaxError(stmt[-1] + " must be a string to name a type");
+
+            if stmt[offset] != 'struct':
+                raise SyntaxError("invalid construct");
+            if not isinstance(stmt[offset+1], str):
+                raise SyntaxError(stmt[offset+1] + " does not name a type");
+            if not isinstance(stmt[offset+2], list):
+                raise SyntaxError(stmt[offset+2] + " must be a list");
+
+            struct['struct'] = stmt[offset+1]
+            if 'typedef' not in struct:
+                struct['typedef'] = struct['struct'];
+
+            members = list();
+            for sub_stmt in stmt[offset+2]:
+                if any(not isinstance(i, str) for i in sub_stmt):
+                    raise SyntaxError('All elements of the statement must be strings');
+                if len(sub_stmt) < 2:
+                    raise SyntaxError('Should have at least two');
+
+                typename = sub_stmt[0];
+                for name in sub_stmt[1:]:
+                    if name == ',':
+                        continue
+                    if any(pair[1] == name for pair in members):
+                        raise SyntaxError('Duplicate member named ' + name);
+
+                    members.append((typename, name));
+
+            struct['members'] = members;
+            return struct;
+
+        struct = analyse_struct(stmt);
+        header = 'typedef ' + struct['struct'] + '\n{\n';
+        for member in struct['members']:
+            header += '  ' + member[0] + ' ' + member[1] + ';\n';
+        header += '} ' + struct['typedef'] + ';\n';
+
         return header, '';
 
     def compile_compound_stmt(stmt):
         if stmt[0] == 'struct' or stmt[0] == 'typedef':
             return compile_struct(stmt)
         pass
-
 
     if any(isinstance(i, list) for i in stmt):
         return compile_compound_stmt(stmt);
