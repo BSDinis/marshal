@@ -118,8 +118,34 @@ def compile_stmt(stmt):
 
         return (header, code);
 
+    def compile_struct(stmt):
+        header = str();
+        if stmt[0] != 'typedef': header += 'typedef ';
+        for top_level in stmt:
+            if isinstance(top_level, list):
+                header += '\n{\n';
+                for sub_stmt in top_level:
+                    header += '  ' + ' '.join(sub_stmt) + ';\n';
+                header += '}';
+            else:
+                header += top_level + ' ';
+        if stmt[0] != 'typedef':
+            header += ' ';
+            state = 0
+            for top_level in stmt:
+                if state == 0:
+                    if top_level == 'struct': state = 1
+                else:
+                    if isinstance(top_level, list): break;
+                    else: header += top_level + ' ';
+        header += ';\n';
+        return header, '';
+
     def compile_compound_stmt(stmt):
-        raise "unimplemented"
+        if stmt[0] == 'struct' or stmt[0] == 'typedef':
+            return compile_struct(stmt)
+        pass
+
 
     if any(isinstance(i, list) for i in stmt):
         return compile_compound_stmt(stmt);
@@ -130,6 +156,7 @@ def compile_stmt(stmt):
 def main():
     """ main compiler routine """
     stmts = scan();
+    print(stmts)
     header = '// these are the headers\n\n'
     code   = '// this is the implementation\n\n'
     for stmt in stmts:
