@@ -126,11 +126,10 @@ def compile_stmt(stmt):
                 header += '\n{\n';
                 for sub_stmt in top_level:
                     header += '  ' + ' '.join(sub_stmt) + ';\n';
-                header += '}';
+                header += '} ';
             else:
                 header += top_level + ' ';
         if stmt[0] != 'typedef':
-            header += ' ';
             state = 0
             for top_level in stmt:
                 if state == 0:
