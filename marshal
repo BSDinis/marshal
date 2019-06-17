@@ -85,14 +85,15 @@ def scan():
 
 def compile_stmt(stmt):
     def compile_basic_stmt(stmt):
-        typename = stmt[0];
+        typename_ = '_'.join(stmt);
+        typename = ' '.join(stmt);
         header  = '// adds the corresponding bytes to the buffer, advancing the pointer; fails if there isn\'t enough space\n'
-        header += 'int marshall_{t}(uint8_t ** ptr, ssize_t * rem, {t} val);\n\n'.format(t=typename);
+        header += 'int marshall_{t_}(uint8_t ** ptr, ssize_t * rem, {t} val);\n\n'.format(t_ = typename_, t=typename);
         header += '// rems the corresponding bytes from the buffer, advancing the pointer; fails if there isn\'t enough space; stores result in *val\n'
-        header += 'int unmarshall_{t}(uint8_t ** ptr, ssize_t * rem, {t} * val);\n\n'.format(t = typename)
+        header += 'int unmarshall_{t_}(uint8_t ** ptr, ssize_t * rem, {t} * val);\n\n'.format(t_ = typename_, t = typename)
 
         code    = '// adds the corresponding bytes to the buffer, advancing the pointer; fails if there isn\'t enough space\n'
-        code   += 'int marshall_{t}(uint8_t ** ptr, ssize_t * rem, {t} val)\n'.format(t = typename)
+        code   += 'int marshall_{t_}(uint8_t ** ptr, ssize_t * rem, {t} val)\n'.format(t_ = typename_, t = typename)
         code   += '{\n'
         code   += '  if (ptr == NULL) return 1;\n'
         code   += '  if (rem && *rem < sizeof({t})) return -1;\n'.format(t = typename)
@@ -102,7 +103,7 @@ def compile_stmt(stmt):
         code   += '  return 0;\n'
         code   += '}\n\n'
         code   += '// rems the corresponding bytes from the buffer, advancing the pointer; fails if there isn\'t enough space; stores result in *val\n'
-        code   += 'int unmarshall_{t}(uint8_t ** ptr, ssize_t * rem, {t} * val)\n'.format(t = typename)
+        code   += 'int unmarshall_{t_}(uint8_t ** ptr, ssize_t * rem, {t} * val)\n'.format(t_ = typename_, t = typename)
         code   += '{\n'
         code   += '  if (ptr == NULL) return 1;\n'
         code   += '  if (rem && *rem < sizeof({t})) return -1;\n'.format(t = typename)
@@ -117,10 +118,10 @@ def compile_stmt(stmt):
     def compile_compound_stmt(stmt):
         raise "unimplemented"
 
-    if len(stmt) == 1:
-        return compile_basic_stmt(stmt);
-    else:
+    if any(isinstance(i, list) for i in stmt):
         return compile_compound_stmt(stmt);
+    else:
+        return compile_basic_stmt(stmt);
 
 
 def main():
