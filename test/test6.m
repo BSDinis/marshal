@@ -1,0 +1,2 @@
+typedef bool int;
+bool;

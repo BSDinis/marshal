@@ -4,9 +4,8 @@
 import sys
 import re
 
+types_done = set();
 cin = sys.stdin;
-
-
 
 def scan():
     def rem_comments(text):
@@ -46,24 +45,23 @@ def scan():
         last_brace = list();
         curr_list = list();
         for tok in tokens:
-            #print(f"tok: {tok} | grouped: {grouped} | curr_list: {curr_list}")
             if tok == '}':
                 grouped += [curr_list];
-                curr_list = grouped;
+                curr_list = [];
             elif tok == '{':
                 grouped += curr_list
-                curr_list = list();
+                curr_list = [];
             else:
-                curr_list += [tok]
+                curr_list += [tok];
 
-
-        return grouped + curr_list;
+        if curr_list: grouped += curr_list
+        return grouped;
 
     def make_sentences(lists):
         sentences = list();
         sentence = list();
         for el in lists:
-            if type(el) == list:
+            if isinstance(el, list):
                 sentence += [make_sentences(el)]
             else:
                 if el == ';':
@@ -81,10 +79,14 @@ def scan():
     text = text.replace(';', ' ; ');
     sentences = text.split(' ')
     sentences = [s for s in sentences if s != '']
-    return make_sentences(group_braces(sentences));
+    sentences = group_braces(sentences);
+    return make_sentences(sentences);
 
 def compile_stmt(stmt):
     def compile_basic_stmt(stmt):
+        if stmt[0] == 'typedef':
+            return ' '.join(stmt) + ';\n\n', '';
+
         typename_ = '_'.join(stmt);
         typename = ' '.join(stmt);
         header  = '// adds the corresponding bytes to the buffer, advancing the pointer; fails if there isn\'t enough space\n'
@@ -113,10 +115,98 @@ def compile_stmt(stmt):
         code   += '  return 0;\n'
         code   += '}\n\n'
 
+        types_done.add(typename);
         return (header, code);
 
+    def compile_struct(stmt):
+        def analyse_struct(stmt):
+            struct = dict();
+            offset = 0;
+            if stmt[0] == 'typedef':
+                offset += 1
+                if isinstance(stmt[-1], str):
+                    struct['typedef'] = stmt[-1]
+                else:
+                    raise SyntaxError(stmt[-1] + " must be a string to name a type");
+
+            if stmt[offset] != 'struct':
+                raise SyntaxError("invalid construct");
+            if not isinstance(stmt[offset+1], str):
+                raise SyntaxError(stmt[offset+1] + " does not name a type");
+            if not isinstance(stmt[offset+2], list):
+                raise SyntaxError(stmt[offset+2] + " must be a list");
+
+            struct['struct'] = stmt[offset+1]
+            if 'typedef' not in struct:
+                struct['typedef'] = struct['struct'];
+
+            members = list();
+            for sub_stmt in stmt[offset+2]:
+                if any(not isinstance(i, str) for i in sub_stmt):
+                    raise SyntaxError('All elements of the statement must be strings');
+                if len(sub_stmt) < 2:
+                    raise SyntaxError('Should have at least two');
+
+                typename = sub_stmt[0];
+                for name in sub_stmt[1:]:
+                    if name == ',':
+                        continue
+                    if any(pair[1] == name for pair in members):
+                        raise SyntaxError('Duplicate member named ' + name);
+
+                    members.append((typename, name));
+
+            struct['members'] = members;
+            return struct;
+
+        struct = analyse_struct(stmt);
+        header = 'typedef ' + struct['struct'] + '\n{\n';
+        for member in struct['members']:
+            header += '  ' + member[0] + ' ' + member[1] + ';\n';
+        header += '} ' + struct['typedef'] + ';\n\n';
+
+        typename = struct['typedef'];
+        header += '// adds the corresponding bytes to the buffer, advancing the pointer; fails if there isn\'t enough space\n'
+        header += 'int marshall_{t}(uint8_t ** ptr, ssize_t * rem, const {t} * val);\n\n'.format(t=typename);
+        header += '// rems the corresponding bytes from the buffer, advancing the pointer; fails if there isn\'t enough space; stores result in *val\n'
+        header += 'int unmarshall_{t}(uint8_t ** ptr, ssize_t * rem, {t} * val);\n\n'.format(t = typename)
+
+        sizeof = ' + '.join(['sizeof(' + member[0] + ')' for member in struct['members']])
+        code    = '// adds the corresponding bytes to the buffer, advancing the pointer; fails if there isn\'t enough space\n'
+        code   += 'int marshall_{t}(uint8_t ** ptr, ssize_t * rem, const {t} * val)\n'.format(t = typename)
+        code   += '{\n'
+        code   += '  if (ptr == NULL) return 1;\n'
+        code   += '  if (rem && *rem < {sz}) return -1;\n'.format(sz = sizeof)
+        code   += '  int ret = 0;\n';
+        for member in struct['members']:
+            code += '  ret = marshall_{t}(ptr, rem, val->{data_m});\n'.format(t = member[0], data_m = member[1]);
+            code += '  if (ret) return ret; // error\n\n'
+        code   += '  return 0;\n'
+        code   += '}\n\n'
+
+        code   += '// rems the corresponding bytes from the buffer, advancing the pointer; fails if there isn\'t enough space; stores result in *val\n'
+        code   += 'int unmarshall_{t}(uint8_t ** ptr, ssize_t * rem, {t} * val)\n'.format(t = typename)
+        code   += '{\n'
+        code   += '  if (ptr == NULL) return 1;\n'
+        code   += '  if (rem && *rem < {sz}) return -1;\n'.format(sz = sizeof)
+        code   += '  int ret = 0;\n';
+        for member in struct['members']:
+            code += '  ret = marshall_{t}(ptr, rem, &(val->{data_m}));\n'.format(t = member[0], data_m = member[1]);
+            code += '  if (ret) return ret; // error\n\n'
+        code   += '  return 0;\n'
+        code   += '}\n\n'
+
+        for member in struct['members']:
+            if member[0] not in types_done:
+                inch, incc = compile_basic_stmt([member[0]])
+                header += inch
+                code += incc
+        return header, code ;
+
     def compile_compound_stmt(stmt):
-        raise "unimplemented"
+        if stmt[0] == 'struct' or stmt[0] == 'typedef':
+            return compile_struct(stmt)
+        pass
 
     if any(isinstance(i, list) for i in stmt):
         return compile_compound_stmt(stmt);
