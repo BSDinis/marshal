@@ -1,1 +1,1 @@
-typedef bool int;
+typedef int bool;
