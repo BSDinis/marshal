@@ -5,11 +5,24 @@ import sys
 import scanner
 import ast
 
-def generate(ast):
+def generate(ast, to_file):
+    includes = str();
+    defines = str();
     types = list();
     structs = list();
     typedefs = list();
     funcs = list();
+
+    if to_file:
+        if ast['includes']:
+            includes += '\n'
+            for inc in ast['includes']:
+                includes += '#include {f}\n'.format(f = inc)
+
+        if ast['defines']:
+            defines += '\n'
+            for d in ast['defines']:
+               defines += '#define {o} {n}\n'.format(o = d[0], n = d[1])
 
     if ast['structs']:
         for struct in ast['structs']:
@@ -28,7 +41,7 @@ def generate(ast):
     if ast['funcs']:
         typedefs.append('// function prototypes')
 
-    code = str()
+    code = includes + defines;
     for frag in [types, structs, typedefs, funcs]:
         if frag:
             for el in frag:

@@ -86,7 +86,7 @@ def make_ast(stmts):
             'structs': list(),
             'funcs': list(),
             'typedefs': list(),
-            'includes': list(),
+            'includes': {'<stddef.h>', '<stdint.h>', '<stdlib.h>'},
             'defines': list(),
     };
     for stmt in stmts:
@@ -100,7 +100,7 @@ def make_ast(stmts):
         elif typename == FUNC:
             ast['funcs'].append(node);
         elif typename == INCLUDE:
-            ast['includes'].append(node);
+            ast['includes'].add(node);
         elif typename == DEFINE:
             ast['defines'].append(node);
         else:
