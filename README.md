@@ -75,5 +75,6 @@ int exec_cmd(filename_cmd_t *, filename_resp_t *);
 
 And the corresponding source code. In there, a function to specifically parse and exec function `f`:
 ```C
-int func_f_parse_exec(uint8_t * cmd, ssize_t, uint8_t *resp, ssize_t)
+static int func_f_parse_exec(uint8_t * cmd, ssize_t, uint8_t *resp, ssize_t)
+static int resp_f_parse_exec(uint8_t * resp, ssize_t)
 ```
