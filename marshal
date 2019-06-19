@@ -15,12 +15,12 @@ def options():
         do_print = (arg == False and print_all) or arg != False;
         if do_print or prot:
             if has_input:
-                if arg == None:
+                if arg == None or arg == False:
                     return [open(os.path.splitext(f)[0]+'.'+ext, "w") for f in files]
                 else:
                     return [open(arg, "w")] * len(files)
             else:
-                if arg == None:
+                if arg == None or arg == False:
                     return [sys.stdout] * len(files)
                 else:
                     return [open(arg, "w")] * len(files)
