@@ -55,8 +55,8 @@ def scan(cin):
         return grouped;
 
     def preprocessor_add_semicolons(text):
-        patt = re.compile(r'^(#.*)$');
-        return re.sub(patt, r'\1;', text);
+        patt = re.compile('(#.*)');
+        return re.sub(patt, '\g<1>;', text)
 
     def make_sentences(lists):
         sentences = list();
@@ -73,8 +73,8 @@ def scan(cin):
 
         return sentences
 
-    text = rem_comments(cin.read()).replace('\n', '');
-    text = preprocessor_add_semicolons(text);
+    text = rem_comments(cin.read())
+    text = preprocessor_add_semicolons(text).replace('\n', '')
     text = text.replace('#', ' # ');
     text = text.replace('}', ' } ');
     text = text.replace('{', ' { ');
