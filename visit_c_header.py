@@ -48,9 +48,6 @@ def gen_typedefs(ast):
 
 
 def gen_funcs(ast):
-    def gen_handler_typedef(fun):
-        return
-
     funcs = list()
     if ast['funcs']:
         funcs.append('\n'.join([
@@ -60,13 +57,17 @@ def gen_funcs(ast):
             'int resp_parse_exec(uint8_t const * const cmd, ssize_t const);'
             ]))
         for fun in ast['funcs']:
+            rett = fun['return_t']
+            name = fun['name']
+            a = arg_list(fun, True)
             funcs.append('\n'.join([
-                '// function {f}'.format(f = fun['name']),
-                'typedef {r} (func_{n}_handler_t *)({args});'.format(r = fun['return_t'], n = fun['name'], args = arg_list(fun, False)),
-                'typedef int (resp_{n}_handler_t *)({r});'.format(r = fun['return_t'], n = fun['name']),
-                'ssize_t const func_{f}_sz = {sz};'.format(f = fun['name'], sz = fun_size(ast, fun)),
-                'int func_{f}_register(func_{f}_handler_t);'.format(f = fun['name']),
-                'int resp_{f}_register(resp_{f}_handler_t);'.format(f = fun['name']),
+                '// function {f}'.format(f = name),
+                'typedef {r} (func_{n}_handler_t *)({args});'.format(r = rett, n = name, args = arg_list(fun, False)),
+                'typedef int (resp_{n}_handler_t *)({r});'.format(r = rett if rett != 'void' else '', n = name),
+                'ssize_t const func_{f}_sz = {sz};'.format(f = name, sz = fun_size(ast, fun)),
+                'static int func_{f}_marshal(uint8_t *{args})'.format(n = f, args = ', ' + a if a else '')
+                'int func_{f}_register(func_{f}_handler_t);'.format(f = name),
+                'int resp_{f}_register(resp_{f}_handler_t);'.format(f = name),
                 ]))
     return funcs;
 

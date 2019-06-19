@@ -24,7 +24,8 @@ def gen_struct(s):
 def gen_func(f):
     return '\n'.join([
         '// function {n}'.format(n = f['name']),
-        'static int func_{n}_marshal(uint8_t *, {args})'.format(n = f['name'], args = arg_list(f, True))
+        'static int func_{n}_parse_exec(uint8_t *cmd , ssize_t, uint8_t *resp, ssize_t)'.format(n = f['name']),
+        'static int resp_{n}_parse_exec(uint8_t *resp, ssize_t)'.format(n = f['name'])
         ])
 
 def generate(ast):

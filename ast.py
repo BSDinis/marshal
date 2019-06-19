@@ -103,7 +103,8 @@ def make_func(ast, stmt):
     arg = []
     for i, s in enumerate(stmt[idx + 1:]):
         if s == ')':
-            f['args'].append((' '.join(arg[:-1]), arg[-1]))
+            if arg:
+                f['args'].append((' '.join(arg[:-1]), arg[-1]))
             break
         elif s == ',':
             f['args'].append((' '.join(arg[:-1]), arg[-1]))
