@@ -50,12 +50,12 @@ def main():
     for cin, header, code in zip(cins, headers, codes):
         astree = ast.make_ast(scanner.scan(cin));
         if header:
-            print('/* ========= HEADERS =========== */', file=header)
+            print('/***\n * headers\n */', file = header)
             print(visit_c_header.generate(astree), file=header);
         if code:
-            print('/* ========= PROTOTYPES ========= */', file = code)
+            print('/***\n * protoyped declarations\n */', file = code)
             print(visit_c_prot.generate(astree), file = code);
-            print('/* ========= CODE ========= */', file = code)
+            print('/***\n * code\n */', file = code)
             print(visit_c_code.generate(astree), file = code);
 
     return 0
