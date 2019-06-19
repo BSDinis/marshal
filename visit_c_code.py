@@ -5,6 +5,7 @@ import sys
 import scanner
 import ast
 
+
 def gen_func(f):
     return ['']
 
@@ -12,53 +13,71 @@ def gen_type_marshal(typename):
     typename_u = typename.replace(' ', '_')
     code = str()
     variable = str()
-    code  = 'static int marshall_{t_}(uint8_t ** ptr, ssize_t * rem, {t} val)\n'.format(t_ = typename_u, t = typename)
-    code += '{\n';
-    code += '  if (ptr == NULL) return 1;\n'
-    code += '  if (rem && *rem < sizeof({t})) return -1;\n'.format(t_ = typename_u, t = typename)
-    code += '  memcpy(*ptr, &val, sizeof({t}));\n'.format(t_ = typename_u, t = typename)
-    code += '  *ptr += sizeof({t});\n'.format(t_ = typename_u, t = typename)
-    code += '  if (rem) *rem -= sizeof({t});\n'.format(t_ = typename_u, t = typename)
-    code += '  return 0;\n'
-    code += '}'
-    return code
+    code  = \
+'''static int marshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const val)
+{{
+  if (ptr == NULL) return 1;
+  if (rem && *rem < sizeof({t})) return -1;
+
+  memcpy(*ptr, &cal, sizeof({t}));
+
+  *ptr += sizeof({t});
+  if (rem) *rem -= sizeof({t});
+
+  return 0;
+}}'''
+    return code.format(t_ = typename_u, t = typename)
 
 def gen_type_unmarshal(typename):
     typename_u = typename.replace(' ', '_')
     code = str()
     variable = str()
-    code  = 'static int unmarshall_{t_}(uint8_t ** ptr, ssize_t * rem, {t} val)\n'.format(t_ = typename_u, t = typename)
-    code += '{\n';
-    code += '  if (ptr == NULL) return 1;\n'
-    code += '  if (rem && *rem < sizeof({t})) return -1;\n'.format(t_ = typename_u, t = typename)
-    code += '  memcpy(&val, *ptr, sizeof({t}));\n'.format(t_ = typename_u, t = typename)
-    code += '  *ptr += sizeof({t});\n'.format(t_ = typename_u, t = typename)
-    code += '  if (rem) *rem -= sizeof({t});\n'.format(t_ = typename_u, t = typename)
-    code += '  return 0;\n'
-    code += '}'
-    return code
+    code  = \
+'''static int unmarshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * const val)
+{{
+  if (ptr == NULL) return 1;
+  if (rem && *rem < sizeof({t})) return -1;
+
+  memcpy(val, *ptr, sizeof({t}));
+
+  *ptr += sizeof({t});
+  if (rem) *rem -= sizeof({t});
+
+  return 0;
+}}'''
+    return code.format(t_ = typename_u, t = typename)
 
 def gen_struct_marshal(ast, s):
     typename = s['typedef']
     typename_u = typename.replace(' ', '_')
-    sz_decl = 'const ssize_t sz = ' + ' + '.join(['sizeof(' + m[0] + ')' for m in s['members']]) + ';\n'
+    sz_decl = 'ssize_t const sz = ' + ' + '.join(['sizeof(' + m[0] + ')' for m in s['members']])
     code = str()
     variable = str()
-    code  = 'static int marshall_{t_}(uint8_t ** ptr, ssize_t * rem, {t} val)\n'.format(t_ = typename_u, t = typename)
-    code += '{\n';
-    code += '  if (ptr == NULL) return 1;\n'
-    code += '  ' + sz_decl + '\n';
-    code += '  if (rem && *rem < sz) return -1;\n'
+    code = \
+'''static int marshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const * val)
+{{
+  if (ptr == NULL) return 1;
+
+  {szdecl};
+  if (rem && *rem < sz) return -1;
+
+
+'''
     for m in s['members']:
         if any(struct['typedef'] == m[0] for struct in ast['structs']):
             code += '  ret = marshall_{t}(ptr, rem, &(val->{data_m}));\n'.format(t = m[0], data_m = m[1]);
         else:
             code += '  ret = marshall_{t}(ptr, rem, val->{data_m});\n'.format(t = m[0], data_m = m[1]);
         code += '  if (ret) return ret; // error\n\n'
-    code += '  if (rem) *rem -= sz;\n'
-    code += '  return 0;\n'
-    code += '}'
-    return code
+
+    code += \
+'''
+  *ptr += sz;
+  if (rem) *rem -= sz;
+  return 0;
+}}
+'''
+    return code.format(t_ = typename_u, t = typename, szdecl = sz_decl)
 
 
 def gen_struct_unmarshal(ast, s):
@@ -67,18 +86,28 @@ def gen_struct_unmarshal(ast, s):
     sz_decl = 'const ssize_t sz = ' + ' + '.join(['sizeof(' + m[0] + ')'  for m in s['members']]) + ';\n'
     code = str()
     variable = str()
-    code  = 'static int unmarshall_{t_}(uint8_t ** ptr, ssize_t * rem, {t} val)\n'.format(t_ = typename_u, t = typename)
-    code += '{\n';
-    code += '  if (ptr == NULL) return 1;\n'
-    code += '  ' + sz_decl + '\n';
-    code += '  if (rem && *rem < sz) return -1;\n'
+    code = \
+'''static int unmarshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * val)
+{{
+  if (ptr == NULL) return 1;
+
+  {szdecl};
+  if (rem && *rem < sz) return -1;
+
+
+'''
     for m in s['members']:
         code += '  ret = unmarshall_{t}(ptr, rem, &(val->{data_m}));\n'.format(t = m[0], data_m = m[1]);
         code += '  if (ret) return ret; // error\n\n'
-    code += '  if (rem) *rem -= sz;\n'
-    code += '  return 0;\n'
-    code += '}'
-    return code
+
+    code += \
+'''
+  *ptr += sz;
+  if (rem) *rem -= sz;
+  return 0;
+}}
+'''
+    return code.format(t_ = typename_u, t = typename, szdecl = sz_decl)
 
 def generate(ast):
     types = list();
