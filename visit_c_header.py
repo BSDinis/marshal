@@ -12,9 +12,9 @@ def generate(ast):
     funcs = list();
 
     if ast['structs']:
-        structs.append('// struct definitions')
         for struct in ast['structs']:
-            code = 'typedef struct ' + struct['struct'] + '\n{\n';
+            code = '// {t}\n'.format(t = struct['typedef'])
+            code += 'typedef struct ' + struct['struct'] + '\n{\n';
             for member in struct['members']:
                 code += '  ' + member[0] + ' ' + member[1] + ';\n';
             code += '} ' + struct['typedef'] + ';';
@@ -32,8 +32,7 @@ def generate(ast):
     for frag in [types, structs, typedefs, funcs]:
         if frag:
             for el in frag:
-                code += el + '\n\n'
-            code += '\n'
+                code += '\n' + el + '\n'
 
     return code;
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""" Marshal C header file visitor """
+""" Marshal C prototype visitor """
 
 import sys
 import scanner
@@ -32,14 +32,12 @@ def generate(ast):
     funcs = list();
 
     if ast['types']:
-        types.append('// type definitions')
         for typ in ast['types']:
-            types.append(gen_type(typ))
+            types.append('// {t}\n'.format(t = typ) + gen_type(typ))
 
     if ast['structs']:
-        structs.append('// struct definitions')
         for struct in ast['structs']:
-            structs.append(gen_struct(struct))
+            structs.append('// {t}\n'.format(t = struct['typedef']) + gen_struct(struct))
 
     if ast['funcs']:
         typedefs.append('// function prototypes')
@@ -50,8 +48,7 @@ def generate(ast):
     for frag in [types, structs, typedefs, funcs]:
         if frag:
             for el in frag:
-                code += el + '\n\n'
-            code += '\n'
+                code += '\n' + el + '\n'
 
     return code;
 

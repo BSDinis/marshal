@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""" Marshal C header file visitor """
+""" Marshal C source file visitor """
 
 import sys
 import scanner
@@ -75,15 +75,14 @@ def gen_struct_marshal(ast, s):
   *ptr += sz;
   if (rem) *rem -= sz;
   return 0;
-}}
-'''
+}}'''
     return code.format(t_ = typename_u, t = typename, szdecl = sz_decl)
 
 
 def gen_struct_unmarshal(ast, s):
     typename = s['typedef']
     typename_u = typename.replace(' ', '_')
-    sz_decl = 'const ssize_t sz = ' + ' + '.join(['sizeof(' + m[0] + ')'  for m in s['members']]) + ';\n'
+    sz_decl = 'const ssize_t sz = ' + ' + '.join(['sizeof(' + m[0] + ')'  for m in s['members']])
     code = str()
     variable = str()
     code = \
@@ -105,8 +104,7 @@ def gen_struct_unmarshal(ast, s):
   *ptr += sz;
   if (rem) *rem -= sz;
   return 0;
-}}
-'''
+}}'''
     return code.format(t_ = typename_u, t = typename, szdecl = sz_decl)
 
 def generate(ast):
@@ -116,28 +114,32 @@ def generate(ast):
     funcs = list();
 
     if ast['types']:
-        types.append('// type definitions')
         for typ in ast['types']:
-            types.append(gen_type_marshal(typ))
-            types.append(gen_type_unmarshal(typ))
+            types.append([
+                '// {t}'.format(t = typ),
+                gen_type_marshal(typ),
+                gen_type_unmarshal(typ)
+                ])
 
     if ast['structs']:
-        structs.append('// struct definitions')
         for struct in ast['structs']:
-            structs.append(gen_struct_marshal(ast, struct))
-            structs.append(gen_struct_unmarshal(ast, struct))
+            structs.append([
+                '// {t}'.format(t = struct['typedef']),
+                gen_struct_marshal(ast, struct),
+                gen_struct_unmarshal(ast, struct)
+            ])
 
     if ast['funcs']:
-        typedefs.append('// function prototypes')
         for func in ast['funcs']:
-            funcs.append(gen_func(func))
+            funcs.append([gen_func(func)])
 
     code = str()
     for frag in [types, structs, typedefs, funcs]:
         if frag:
-            for el in frag:
-                code += el + '\n\n'
-            code += '\n'
+            for group in frag:
+                code += '\n'
+                for el in group:
+                    code += el + '\n';
 
     return code;
 
