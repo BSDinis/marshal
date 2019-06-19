@@ -19,7 +19,7 @@ def gen_type_marshal(typename):
   if (ptr == NULL) return 1;
   if (rem && *rem < sizeof({t})) return -1;
 
-  memcpy(*ptr, &cal, sizeof({t}));
+  memcpy(*ptr, &val, sizeof({t}));
 
   *ptr += sizeof({t});
   if (rem) *rem -= sizeof({t});
@@ -60,6 +60,7 @@ def gen_struct_marshal(ast, s):
 
   {szdecl};
   if (rem && *rem < sz) return -1;
+  int ret = 0;
 
 
 '''
@@ -92,6 +93,7 @@ def gen_struct_unmarshal(ast, s):
 
   {szdecl};
   if (rem && *rem < sz) return -1;
+  int ret = 0;
 
 
 '''

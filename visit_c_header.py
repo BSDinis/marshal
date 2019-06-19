@@ -36,7 +36,7 @@ def generate(ast, to_file):
     if ast['typedefs']:
         typedefs.append('// typedefs')
         for typedef in ast['typedefs']:
-            typedefs.append('typedef {n} {o};'.format(n = typedef['new'], o = typedef['old']))
+            typedefs.append('typedef {o} {n};'.format(n = typedef['new'], o = typedef['old']))
 
     if ast['funcs']:
         typedefs.append('// function prototypes')
