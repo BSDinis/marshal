@@ -6,7 +6,7 @@ import ast
 
 
 def gen_func(f):
-    return ['']
+    return ''
 
 def gen_type_marshal(typename):
     typename_u = typename.replace(' ', '_')
@@ -116,31 +116,28 @@ def generate(ast):
 
     if ast['types']:
         for typ in ast['types']:
-            types.append([
+            types.append('\n'.join([
                 '// {t}'.format(t = typ),
                 gen_type_marshal(typ),
                 gen_type_unmarshal(typ)
-                ])
+                ]))
 
     if ast['structs']:
         for struct in ast['structs']:
-            structs.append([
+            structs.append('\n'.join([
                 '// {t}'.format(t = struct['typedef']),
                 gen_struct_marshal(ast, struct),
                 gen_struct_unmarshal(ast, struct)
-            ])
+            ]))
 
     if ast['funcs']:
         for func in ast['funcs']:
-            funcs.append([gen_func(func)])
+            funcs.append(gen_func(func))
 
     code = str()
     for frag in [types, structs, typedefs, funcs]:
         if frag:
-            for group in frag:
-                code += '\n'
-                for el in group:
-                    code += el + '\n';
+            code += '\n\n' + '\n'.join(frag)
 
     return code;
 

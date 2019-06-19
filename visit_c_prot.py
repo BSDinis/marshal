@@ -3,9 +3,7 @@
 import sys
 import scanner
 import ast
-
-def gen_func(f):
-    return ['']
+from ast import arg_list
 
 def gen_typename(typename, ref):
     typename_u = typename.replace(' ', '_')
@@ -25,10 +23,9 @@ def gen_struct(s):
 
 def gen_func(f):
     return '\n'.join([
-        '// function {n}'.format(n = f.name),
-        'static int func_{n}_marshal(uint8_t *, {args})'.format(n = f.name, args = arg_list(f))
+        '// function {n}'.format(n = f['name']),
+        'static int func_{n}_marshal(uint8_t *, {args})'.format(n = f['name'], args = arg_list(f, True))
         ])
-
 
 def generate(ast):
     types = list();
