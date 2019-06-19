@@ -27,11 +27,10 @@ Will generate the following header file:
 
 ```C
 // headers ommitted
-struct fancy_struct {
+typedef struct fancy_struct {
   int a;
   double b;
-};
-typedef struct fancy_struct fancy_struct;
+} fancy_struct;
 
 // note: you have to pass an array with least sizeof(fancy_struct) B
 int fancy_struct_marshal(fancy_struct *, uint8_t *);
@@ -46,46 +45,34 @@ int fancy_struct_unmarshal(fancy_struct *, uint8_t *, ssize_t);
 Now, you can also define a function-based API.
 
 ```C
-int function1(int a);
-fancy_struct function2(double b, char c);
+T f(X b, Y c);
 ```
 
 Which will in turn generate the following header file (besides the struct marshaling and unmarshaling).
 
 ```C
+// get necessary size for the response based on the code
+inline ssize_t func_resp_sz(uint8_t code);
+
+// parse and exec
+int func_parse_exec(uint8_t * cmd, ssize_t, uint8_t *resp, ssize_t );
+
 // here filename is the name of the .m file
-typedef struct filename_cmd_t
-{
-  int code; // identifies the function
-  union {
-    int i;
-    double d;
-  } arg1;
+typedef T (func_f_t *)(X, Y);
 
-  union {
-    char c;
-  } arg2;
-} filename_cmd_t;
-
-typedef struct filename_resp_t
-{
-  int code; // identifies the function
-  union {
-    int i;
-    fancy_struct f;
-  } ret;
-} filename_resp_t;
-
-typedef void (handler_func_t *)(filename_cmd_t *, filename_resp_t *);
+ssize_t const func_f_sz = XXX;
 
 // again, the buffer and the struct must be must be  allocd
 // these are for the caller
-int function1_marshal(uint8_t *, int);
-int function1_unmarshal(uint8_t *, ssize_t, filename_cmd_t *);
+int func_f_marshal(uint8_t *, int);
+
 
 // this is for the receiver
-int register_functions(handler_func_t *, ssize_t);
+int func_f_register(func_f_t);
 int exec_cmd(filename_cmd_t *, filename_resp_t *);
 ```
 
-And the corresponding source code.
+And the corresponding source code. In there, a function to specifically parse and exec function `f`:
+```C
+int func_f_parse_exec(uint8_t * cmd, ssize_t, uint8_t *resp, ssize_t)
+```
