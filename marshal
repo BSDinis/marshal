@@ -40,13 +40,24 @@ def options():
         in_files = [sys.stdin]
         args.code += ['']
 
-    return in_files, \
-            get_ext_out(args.H, args.code, has_input, print_all, False, 'h'),\
-            get_ext_out(args.c, args.code, has_input, print_all, args.p, 'c');
+    headers = get_ext_out(args.H, args.code, has_input, print_all, False, 'h')
+    codes   = get_ext_out(args.c, args.code, has_input, print_all, args.p, 'c')
+    what_to_print = 0; # print nothing
+    if args.p and args.c or print_all:
+        what_to_print = 3
+    elif args.p:
+        what_to_print = 2;
+    elif args.c != False:
+        what_to_print = 1;
+
+
+
+
+    return in_files, headers, codes, what_to_print
 
 def main():
     """ main compiler routine """
-    cins, headers, codes = options();
+    cins, headers, codes, what_to_print = options();
     for cin, header, code in zip(cins, headers, codes):
         astree = ast.make_ast(scanner.scan(cin));
         if header:
@@ -57,15 +68,17 @@ def main():
             print('/***\n * headers\n */', file = header)
             print(visit_c_header.generate(astree, header.name != '<stdout>'), file=header);
         if code:
-            if header.name != '<stdout>':
+            if header and header.name != '<stdout>':
                 print(f'/**\n * {code.name}\n */\n', file=code)
                 print(f'#include "{header.name}"', file = code)
                 print('#include <string.h>', file = code)
                 print('\n', file = code)
-            print('/***\n * protoyped declarations\n */', file = code)
-            print(visit_c_prot.generate(astree), file = code);
-            print('/***\n * code\n */', file = code)
-            print(visit_c_code.generate(astree), file = code);
+            if what_to_print in [2, 3]:
+                print('/***\n * protoyped declarations\n */', file = code)
+                print(visit_c_prot.generate(astree), file = code);
+            if what_to_print in [1, 3]:
+                print('/***\n * code\n */', file = code)
+                print(visit_c_code.generate(astree), file = code);
 
     return 0
 
