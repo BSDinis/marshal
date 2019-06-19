@@ -64,6 +64,7 @@ inline ssize_t func_resp_sz(uint8_t code);
 
 // parse and exec
 int func_parse_exec(uint8_t * cmd, ssize_t, uint8_t *resp, ssize_t );
+int resp_parse_exec(uint8_t const * resp, ssize_t const);
 
 // here filename is the name of the .m file
 typedef T (func_f_t *)(X, Y);
@@ -77,7 +78,6 @@ int func_f_marshal(uint8_t *, int);
 
 // this is for the receiver
 int func_f_register(func_f_t);
-int exec_cmd(filename_cmd_t *, filename_resp_t *);
 ```
 
 And the corresponding source code. In there, a function to specifically parse and exec function `f`:
