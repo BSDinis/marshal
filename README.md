@@ -23,22 +23,30 @@ struct fancy_struct {
 };
 ```
 
-Will generate the following header file:
+Will generate the following header file code:
 
 ```C
-// headers ommitted
 typedef struct fancy_struct {
   int a;
   double b;
 } fancy_struct;
+```
 
+And the source code
+```C
 // note: you have to pass an array with least sizeof(fancy_struct) B
-int fancy_struct_marshal(fancy_struct *, uint8_t *);
+static int marshal_fancy_struct(uint8_t ** const ptr, ssize_t * const rem, fancy_struct const * const);
 
 /* note: fancy struct must have been allocd previously
  * pass the size of the buffer to make sure it is valid
  * will return -1 on unsuccessful unmarshalling */
-int fancy_struct_unmarshal(fancy_struct *, uint8_t *, ssize_t);
+static int unmarshal_fancy_struct(uint8_t ** const ptr, ssize_t * const, fancy_struct * const);
+
+static int marshal_int(uint8_t ** const ptr, ssize_t * const rem, int const);
+static int unmarshal_int(uint8_t ** const ptr, ssize_t * const, int * const);
+
+static int marshal_double(uint8_t ** const ptr, ssize_t * const rem, double const);
+static int unmarshal_double(uint8_t ** const ptr, ssize_t * const, double * const);
 ```
 
 
