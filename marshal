@@ -33,7 +33,6 @@ def options():
     parser.add_argument('-p', action='store_true', help='generate function prototypes for the C file')
 
     args = parser.parse_args()
-    print(args)
     in_files = [open(c, "r") for c in args.code]
     print_all = all(arg == False for arg in [args.c, args.H, args.p])
     has_input = len(in_files) != 0;
@@ -48,19 +47,16 @@ def options():
 def main():
     """ main compiler routine """
     cins, headers, codes = options();
-    print(cins)
-    print(headers)
-    print(codes)
     for cin, header, code in zip(cins, headers, codes):
         astree = ast.make_ast(scanner.scan(cin));
         if header:
-            print('/* ========= HEADERS =========== */\n', file=header)
-            print(visit_c_header.generate(astree) + '\n\n', file=header);
+            print('/* ========= HEADERS =========== */', file=header)
+            print(visit_c_header.generate(astree), file=header);
         if code:
-            print('/* ========= PROTOTYPES ========= */\n', file = code)
-            print(visit_c_prot.generate(astree) + '\n\n', file = code);
-            print('/* ========= CODE ========= */\n', file = code)
-            print(visit_c_code.generate(astree) + '\n\n', file = code);
+            print('/* ========= PROTOTYPES ========= */', file = code)
+            print(visit_c_prot.generate(astree), file = code);
+            print('/* ========= CODE ========= */', file = code)
+            print(visit_c_code.generate(astree), file = code);
 
     return 0
 
