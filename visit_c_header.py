@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """ Marshal C header file visitor """
 
 import sys
@@ -39,7 +38,20 @@ def generate(ast, to_file):
             typedefs.append('typedef {o} {n};'.format(n = typedef['new'], o = typedef['old']))
 
     if ast['funcs']:
-        typedefs.append('// function prototypes')
+        funcs.append('\n'.join([
+            '// function prototypes',
+            'ssize_t func_resp_sz(uint8_t code);',
+            'int func_parse_exec(uint8_t * cmd, ssize_t, uint8_t *resp, ssize_t);'
+            'int resp_parse_exec(uint8_t const * const cmd, ssize_t const);'
+            ]))
+        for fun in ast['funcs']:
+            funcs.append('\n'.join([
+                '// function {f}'.format(f = fun.name),
+                gen_handler_typedef(fun),
+                'ssize_t const func_{f}_sz = {sz};'.format(f = fun.name, sz = size(fun)),
+                'int func_{f}_register(func_{f}_t);'.format(f = fun.name),
+                ]))
+
 
     code = includes + defines;
     for frag in [types, structs, typedefs, funcs]:

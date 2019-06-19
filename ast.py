@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+""" Marshal ast generator """
 
 import sys
 import scanner
@@ -62,6 +62,39 @@ def make_struct(ast, stmt):
     struct['members'] = members;
     return STRUCT, struct;
 
+def make_func(ast, stmt):
+    f = {
+            'name': str(),
+            'return_t': str(),
+            'args': list(),
+        }
+
+    for idx, s in enumerate(stmt):
+        if s == '(':
+            break
+    else:
+        raise SyntaxError('no parens in function ' + str(stmt))
+
+    f['return_t'] = ' '.join(stmt[:idx - 1]);
+    f['name'] = stmt[idx - 1];
+
+    arg = []
+    for i, s in enumerate(stmt[idx + 1:]):
+        if s == ')':
+            f['args'].append((' '.join(arg[:-1]), arg[-1]))
+            break
+        elif s == ',':
+            f['args'].append((' '.join(arg[:-1]), arg[-1]))
+            arg = []
+        else:
+            arg += [s]
+    else:
+        raise SyntaxError('unmatched parens' + str(stmt))
+
+    return FUNC, f
+
+
+
 def make_preprocessor(ast, stmt):
     if stmt[1] == 'include':
         return INCLUDE, ''.join(stmt[2:]);
@@ -77,6 +110,8 @@ def make_node(ast, stmt):
         return make_preprocessor(ast, stmt)
     elif 'typedef' in stmt:
         return make_typedef(ast, stmt);
+    elif '(' in stmt:
+        return make_func(ast, stmt);
     else:
         return make_type(ast, stmt);
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """ Marshal C prototype visitor """
 
 import sys
@@ -24,6 +23,12 @@ def gen_type(t):
 def gen_struct(s):
     return gen_typename(s['typedef'], True)
 
+def gen_func(f):
+    return '\n'.join([
+        '// function {n}'.format(n = f.name),
+        'static int func_{n}_marshal(uint8_t *, {args})'.format(n = f.name, args = arg_list(f))
+        ])
+
 
 def generate(ast):
     types = list();
@@ -40,7 +45,6 @@ def generate(ast):
             structs.append('// {t}\n'.format(t = struct['typedef']) + gen_struct(struct))
 
     if ast['funcs']:
-        typedefs.append('// function prototypes')
         for func in ast['funcs']:
             funcs.append(gen_func(func))
 

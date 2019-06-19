@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """ Marshal C source file visitor """
 
 import sys
