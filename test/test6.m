@@ -1,2 +1,6 @@
-typedef bool int;
-bool;
+struct abc {
+  int a, b;
+  double c;
+};
+
+

@@ -3,4 +3,7 @@ typedef struct abc {
   double c;
 } def;
 
-
+struct a {
+  int a, b;
+  double c;
+};
