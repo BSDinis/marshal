@@ -7,6 +7,8 @@ TYPE    = 0
 STRUCT  = 1
 FUNC    = 2
 TYPEDEF = 3
+INCLUDE = 4
+DEFINE  = 5
 
 has_nested_list = lambda x : any(isinstance(i, list) for i in x);
 
@@ -60,16 +62,33 @@ def make_struct(ast, stmt):
     struct['members'] = members;
     return STRUCT, struct;
 
+def make_preprocessor(ast, stmt):
+    if stmt[1] == 'include':
+        return INCLUDE, ''.join(stmt[2:]);
+    elif stmt[1] == 'define':
+        return DEFINE, (stmt[2], ' '.join(stmt[3:]));
+    else:
+        raise SyntaxError('invalid preprocessor primitive: ' + stmt)
+
 def make_node(ast, stmt):
     if has_nested_list(stmt):
         return make_struct(ast, stmt);
+    elif stmt[0] == '#':
+        return make_preprocessor(ast, stmt)
     elif 'typedef' in stmt:
         return make_typedef(ast, stmt);
     else:
         return make_type(ast, stmt);
 
 def make_ast(stmts):
-    ast = { 'types': set(), 'structs': list(), 'funcs': list(), 'typedefs': list() };
+    ast = {
+            'types': set(),
+            'structs': list(),
+            'funcs': list(),
+            'typedefs': list(),
+            'includes': list(),
+            'defines': list(),
+    };
     for stmt in stmts:
         typename, node = make_node(ast, stmt);
         if typename   == TYPE:
@@ -80,6 +99,10 @@ def make_ast(stmts):
             ast['typedefs'].append(node);
         elif typename == FUNC:
             ast['funcs'].append(node);
+        elif typename == INCLUDE:
+            ast['includes'].append(node);
+        elif typename == DEFINE:
+            ast['defines'].append(node);
         else:
             raise ValueError(str(typename)  + ' does not name a node type');
 
