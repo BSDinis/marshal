@@ -63,14 +63,14 @@ def main():
         astree = ast.make_ast(scanner.scan(cin));
         if header:
             if header.name != '<stdout>':
-                print(f'/**\n * {header.name}\n */\n', file=header)
+                print(f'/**\n * {header.name}\n */'+'\n', file=header)
                 print('#pragma once\n', file=header)
 
             print('/***\n * headers\n */', file = header)
             print(visit_c_header.generate(astree, header.name != '<stdout>'), file=header);
         if code:
             if header and header.name != '<stdout>':
-                print(f'/**\n * {code.name}\n */\n', file=code)
+                print(f'/**\n * {code.name}\n */'+'\n', file=code)
                 print(f'#include "{header.name}"', file = code)
                 print('#include <string.h>', file = code)
                 print('\n', file = code)

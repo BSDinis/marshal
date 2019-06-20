@@ -7,5 +7,3 @@ test:
 
 .PHONY: install
 install:
-	@echo "would be nice"
-
