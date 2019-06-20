@@ -207,6 +207,7 @@ int func_parse_exec(uint8_t * cmd, ssize_t sz)
     def gen_func(f, fcode):
         name = f['name'];
         args = f['args'];
+        rett = f['return_t'];
         a = arg_list(f, True)
         def resp_f_parse_exec(f):
             code = \
@@ -272,6 +273,31 @@ int func_{f}_register(func_{f}_handler_t handler)
 '''
             return code.format(f = name)
 
+        def resp_f_marshal(f, fcode):
+            code = \
+'''
+int resp_{f}_marshal(uint8_t * cmd, ssize_t sz{rarg})
+{{
+  if (!cmd || sz < 1) return -1;
+
+  cmd[0] = {cd};
+
+  uint8_t * ptr = cmd + 1;
+  sz -= 1;
+'''
+            if rett == 'void':
+                pass
+            elif rett in ast['types']:
+                code += '  if (marshall_{typ_}(&ptr, &sz, ret) != 0)\n    return -1;\n'.format(typ_ = rett.replace(' ', '_'))
+            else:
+                code += '  if (marshall_{typ_}(&ptr, &sz, &{ret}) != 0)\n    return -1;\n'.format(typ_ = rett.replace(' ', '_'))
+            code += \
+'''
+  return 0;
+}}
+'''
+            return code.format(f = name, cd = fcode, rarg = ', ' + rett + ' ret' if rett != 'void' else '')
+
         def func_f_marshal(f, fcode):
             code = \
 '''
@@ -298,7 +324,9 @@ int func_{f}_marshal(uint8_t * cmd, ssize_t sz{aargs})
 '''
             return code.format(f = name, cd = fcode, aargs = ', ' + a if a else '')
 
-        return func_f_parse_exec(f) + resp_f_parse_exec(f) + func_f_register(f) + resp_f_register(f) + func_f_marshal(f, fcode)
+        return func_f_parse_exec(f) + resp_f_parse_exec(f) +\
+                func_f_register(f) + resp_f_register(f) + \
+                func_f_marshal(f, fcode) + resp_f_marshal(f, fcode)
 
     funcs = list()
     if ast['funcs']:
