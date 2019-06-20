@@ -222,7 +222,8 @@ static int resp_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
   if (unmarshall_{typ_}(&ptr, &sz, ret) != 0) return -1;
 
   return resp_f_handler(ret);
-}}'''
+}}
+'''
             return code.format(f = name, typ = f['return_t'], typ_ = f['return_t'].replace(' ', '_'))
 
         def func_f_parse_exec(f):
@@ -245,7 +246,8 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
             code += \
 '''
   return func_f_handler({a});
-}}'''
+}}
+'''
             return code.format(f = name, a = ', '.join([arg[1] for arg in args]))
 
         def resp_f_register(f):
@@ -270,7 +272,7 @@ int func_{f}_register(func_{f}_handler_t handler)
 '''
             return code.format(f = name)
 
-        def func_f_marshal(ast, f, fcode):
+        def func_f_marshal(f, fcode):
             code = \
 '''
 int func_{f}_marshal(uint8_t * cmd, ssize_t sz{aargs})
@@ -293,13 +295,17 @@ int func_{f}_marshal(uint8_t * cmd, ssize_t sz{aargs})
 '''
             return code.format(f = name, cd = fcode, aargs = ', ' + a if a else '')
 
-        return func_f_marshal(ast, f, fcode)
-
-
-
+        return func_f_parse_exec(f) + resp_f_parse_exec(f) + func_f_register(f) + resp_f_register(f) + func_f_marshal(f, fcode)
 
     funcs = list()
     if ast['funcs']:
+        funcs.append('\n'.join([
+            '// functions',
+            func_resp_sz(ast),
+            func_parse_exec(ast),
+            resp_parse_exec(ast),
+            ]))
+
         for code, func in enumerate(ast['funcs']):
             funcs.append('\n'.join([
                 '\n\n// function {f}'.format(f = func['name']),
