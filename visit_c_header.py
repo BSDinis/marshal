@@ -54,7 +54,7 @@ def gen_funcs(ast):
             '// function prototypes',
             'ssize_t func_resp_sz(uint8_t code);',
             'int func_parse_exec(uint8_t * cmd, ssize_t);',
-            'int resp_parse_exec(uint8_t const * const cmd, ssize_t const);'
+            'int resp_parse_exec(uint8_t * const resp, ssize_t);'
             ]))
         for code, fun in enumerate(ast['funcs']):
             rett = fun['return_t']
@@ -64,11 +64,11 @@ def gen_funcs(ast):
                 '// function {f}'.format(f = name),
                 'ssize_t const func_{f}_sz = {sz};'.format(f = name, sz = fun_size(ast, fun)),
                 'uint8_t const func_{f}_code = {c};'.format(f = name, c = code + 1),
-                'typedef {r} (func_{n}_handler_t *)({args});'.format(r = rett, n = name, args = arg_list(fun, False)),
-                'typedef int (resp_{n}_handler_t *)({r});'.format(r = rett if rett != 'void' else '', n = name),
+                'typedef {r} (* func_{n}_handler_t)({args});'.format(r = rett, n = name, args = arg_list(fun, False)),
+                'typedef int (* resp_{n}_handler_t)({r});'.format(r = rett if rett != 'void' else '', n = name),
                 'int func_{f}_register(func_{f}_handler_t);'.format(f = name),
                 'int resp_{f}_register(resp_{f}_handler_t);'.format(f = name),
-                'int func_{f}_marshal(uint8_t *, ssize_t sz{args})'.format(f = name, args = ', ' + a if a else ''),
+                'int func_{f}_marshal(uint8_t *, ssize_t sz{args});'.format(f = name, args = ', ' + a if a else ''),
                 ]))
     return funcs;
 

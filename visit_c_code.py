@@ -165,7 +165,7 @@ ssize_t func_resp_sz(uint8_t code)
     def resp_parse_exec(ast):
         code = \
 '''
-int resp_parse_exec(uint8_t * resp, ssize_t sz)
+int resp_parse_exec(uint8_t * const resp, ssize_t sz)
 {
   if (!resp || sz < 1) return -1;
   memset(resp, 0, sz);
@@ -213,13 +213,13 @@ int func_parse_exec(uint8_t * cmd, ssize_t sz)
 '''
 static int resp_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
 {{
-  if (!cmd || !resp_{f}_handler_t || sz < 1) return -1;
+  if (!cmd || !resp_{f}_handler || sz < 1) return -1;
 
   uint8_t * ptr = cmd + 1;
   sz -= 1;
 
   {typ} ret;
-  if (unmarshall_{typ_}(&ptr, &sz, ret) != 0) return -1;
+  if (unmarshall_{typ_}(&ptr, &sz, &ret) != 0) return -1;
 
   return resp_f_handler(ret);
 }}
@@ -231,7 +231,7 @@ static int resp_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
 '''
 static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
 {{
-  if (!cmd || !func_{f}_handler_t || sz < 1) return -1;
+  if (!cmd || !func_{f}_handler || sz < 1) return -1;
 
   uint8_t * ptr = cmd + 1;
   sz -= 1;
@@ -280,6 +280,9 @@ int func_{f}_marshal(uint8_t * cmd, ssize_t sz{aargs})
   if (!cmd || sz < 1) return -1;
 
   cmd[0] = {cd};
+
+  uint8_t * ptr = cmd + 1;
+  sz -= 1;
 '''
             for arg in args:
                 if arg[0] == 'void':
