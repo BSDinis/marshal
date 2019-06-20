@@ -34,7 +34,7 @@ def gen_types(ast, namespace):
 '''static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {param})
 {{
   for (ssize_t i = 0; i < {sz}; i++) {{
-    int ret = unmarshal_{bt}(ptr, rem, &val[i]);
+    int ret = unmarshal_{bt}(ptr, rem, {possible}val[i]);
     if (ret) return ret;
   }}
 
@@ -44,7 +44,8 @@ def gen_types(ast, namespace):
         return code.format(t_ = linearize_type(typename),
                 param = gen_type_decl([typename, 'val']),
                 sz = size,
-                bt = linearize_type(prev_type)
+                bt = linearize_type(prev_type),
+                possible = '' if '[' in prev_type else '&'
                 )
 
 
