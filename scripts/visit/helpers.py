@@ -63,24 +63,24 @@ def fun_ret_size(ast, f):
 
     return ' + '.join(sizes);
 
+def gen_type_decl(t_list):
+    def find_slice(s):
+        first = s.find('[')
+        if first == -1: return None
+        last = [p for p, c in enumerate(s) if c == ']'][-1]
+        return (first, last + 1)
+
+    s = ' '.join(t_list)
+    slic = find_slice(s)
+    if slic:
+        first = slic[0]
+        last = slic[1]
+        s = s[:first] + s[last:] + s[first:last]
+    print(s)
+    return s;
+
 def arg_list(f, full):
-    def gen_type(t_list):
-        def find_slice(s):
-            first = s.find('[')
-            if first == -1: return None
-            last = [p for p, c in enumerate(s) if c == ']'][-1]
-            return (first, last + 1)
-
-        s = ' '.join(t_list)
-        slic = find_slice(s)
-        if slic:
-            first = slic[0]
-            last = slic[1]
-            s = s[:first] + s[last:] + s[first:last]
-        print(s)
-        return s;
-
     if full:
-        return ', '.join(gen_type(arg) for arg in f['args'])
+        return ', '.join(gen_type_decl(arg) for arg in f['args'])
     else:
         return ', '.join(arg[0] for arg in f['args'])

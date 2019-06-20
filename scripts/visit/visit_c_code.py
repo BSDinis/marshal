@@ -10,7 +10,7 @@ def gen_types(ast, namespace):
         size = typename.split('[')[1].split(']')[0]
         base_type = typename.split('[')[0]
         code  = \
-'''static int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const val)
+'''static int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {param})
 {{
   for (ssize_t i = 0; i < {sz}; i++) {{
     int ret = marshal_{bt}(ptr, rem, val[i]);
@@ -21,7 +21,7 @@ def gen_types(ast, namespace):
 }}
 '''
         return code.format(t_ = linearize_type(typename),
-                t = typename,
+                param = gen_type_decl([typename, 'const val']),
                 sz = size,
                 bt = linearize_type(base_type)
                 )
@@ -30,7 +30,7 @@ def gen_types(ast, namespace):
         size = typename.split('[')[1].split(']')[0]
         base_type = typename.split('[')[0]
         code  = \
-'''static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * const val)
+'''static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {param})
 {{
   for (ssize_t i = 0; i < {sz}; i++) {{
     int ret = unmarshal_{bt}(ptr, rem, &val[i]);
@@ -41,7 +41,7 @@ def gen_types(ast, namespace):
 }}
 '''
         return code.format(t_ = linearize_type(typename),
-                t = typename,
+                param = gen_type_decl([typename, 'val']),
                 sz = size,
                 bt = linearize_type(base_type)
                 )

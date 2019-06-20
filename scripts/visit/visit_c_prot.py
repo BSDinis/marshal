@@ -11,9 +11,9 @@ def gen_typename(typename, ref):
     variable = str()
     if ref: variable = 'const {t} *'.format(t = typename);
     else:   variable = '{t}'.format(t = typename);
-    code  = 'static int marshal_{t_}(uint8_t ** ptr, ssize_t * rem, {v});\n'.format(t_ = linearize_type(typename), v=variable)
+    code  = 'static int marshal_{t_}(uint8_t ** ptr, ssize_t * rem, const {v});\n'.format(t_ = linearize_type(typename), v=variable)
     if '[' in typename:
-        code += 'static int unmarshal_{t_}(uint8_t ** ptr, ssize_t * rem, {t});'.format(t_ = linearize_type(typename), t=typename[:typename.find('[')] + ' *' + typename[typename.find('['):])
+        code += 'static int unmarshal_{t_}(uint8_t ** ptr, ssize_t * rem, {t});'.format(t_ = linearize_type(typename), t=gen_type_decl([typename, 'val']))
     else:
         code += 'static int unmarshal_{t_}(uint8_t ** ptr, ssize_t * rem, {t} *);'.format(t_ = linearize_type(typename), t=typename)
     return code
