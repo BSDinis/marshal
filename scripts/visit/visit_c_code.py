@@ -130,6 +130,35 @@ def gen_structs(ast):
     return structs;
 
 def gen_funcs(ast):
+    def func_resp_sz(ast):
+        rett = [f['return_t'] for f in ast['funcs']];
+        def gen_size(t):
+            if t == 'void':
+                return ''
+            elif t in ast['types']:
+                return ' + sizeof({r})'.format(r = t)
+            else:
+                return ' + ' + struct_size(next(s for s in ast['structs'] if s['typedef'] == t))
+
+        resp_sz = ['sizeof(uint8_t)' + gen_size(t) for t in rett];
+        code = \
+'''
+ssize_t func_resp_sz(uint8_t code)
+{
+  switch (code) {
+'''
+        for fcode, sz in enumerate(resp_sz):
+            code += '    case {c}:\n      return {s};\n'.format(c = fcode + 1, s = sz);
+
+        code += \
+'''    default:
+      return -1;
+  }
+  return -1;
+}
+'''
+        return code
+
     def resp_parse_exec(ast):
         code = \
 '''
@@ -300,6 +329,7 @@ int func_{f}_marshal(uint8_t * cmd, ssize_t sz{aargs})
     if ast['funcs']:
         funcs.append('\n'.join([
             '// functions',
+            func_resp_sz(ast),
             func_parse_exec(ast),
             resp_parse_exec(ast),
             ]))
