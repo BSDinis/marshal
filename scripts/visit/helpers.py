@@ -1,5 +1,7 @@
 """ Type helping """
 
+from syntax.ast import add_type
+
 def linearize_type(t):
     return t.replace(' ', '_').replace('[', '_').replace(']', '')
 
@@ -39,7 +41,7 @@ def fun_size(ast, f):
         elif any(arg[0] == s['typedef'] for s in ast['structs']):
             sizes.append(struct_size(next(s for s in ast['structs'] if arg[0] == s['typedef'])))
         else:
-            ast['types'].add(arg[0])
+            add_type(ast, arg[0])
             sizes.append('sizeof('+arg[0]+')')
 
     return ' + '.join(sizes);
@@ -51,7 +53,7 @@ def fun_ret_size(ast, f):
     elif any(f['return_t'] == s['typedef'] for s in ast['structs']):
         sizes.append(struct_size(next(s for s in ast['structs'] if f['return_t'] == s['typedef'])))
     else:
-        ast['types'].add(f['return_t'])
+        add_type(ast, f['return_t'])
         sizes.append('sizeof('+f['return_t']+')')
 
     return ' + '.join(sizes);

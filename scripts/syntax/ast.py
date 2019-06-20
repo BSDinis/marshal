@@ -12,6 +12,12 @@ DEFINE  = 5
 
 has_nested_list = lambda x : any(isinstance(i, list) for i in x);
 
+def add_type(ast, t):
+    def last_pos(string, char): return [pos for pos, c in enumerate(string) if char == c][-1]
+    ast['types'].add(t)
+    if '[' in t:
+        add_type(ast, t[:last_pos(t, '[')])
+
 def make_type(ast, stmt):
     node = ' '.join(stmt)
     return TYPE, node;
@@ -128,7 +134,7 @@ def make_ast(stmts):
     for stmt in stmts:
         typename, node = make_node(ast, stmt);
         if typename   == TYPE:
-            ast['types'].add(node);
+            add_type(ast, node);
         elif typename == STRUCT:
             ast['structs'].append(node)
         elif typename == TYPEDEF:
@@ -147,15 +153,15 @@ def make_ast(stmts):
             if any(struct['typedef'] == m[0] for struct in ast['structs']):
                 pass
             elif m[0] not in ast['types']:
-                ast['types'].add(m[0])
+                add_type(ast, m[0])
 
     for f in ast['funcs']:
         if f['return_t'] != 'void' and not any(f['return_t'] == s['typedef'] for s in ast['structs']):
-            ast['types'].add(f['return_t'])
+            add_type(ast, f['return_t'])
 
         for t in f['args']:
             if t[0] != 'void' and not any(t[0] == s['typedef'] for s in ast['structs']):
-                ast['types'].add(t[0])
+                add_type(ast, t[0])
 
     return ast;
 
