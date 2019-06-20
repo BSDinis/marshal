@@ -64,11 +64,12 @@ def gen_funcs(ast):
                 '// function {f}'.format(f = name),
                 'ssize_t const func_{f}_sz = {sz};'.format(f = name, sz = fun_size(ast, fun)),
                 'uint8_t const func_{f}_code = {c};'.format(f = name, c = code + 1),
-                'typedef {r} (* func_{n}_handler_t)({args});'.format(r = rett, n = name, args = arg_list(fun, False)),
+                'typedef int (* func_{n}_handler_t)({args});'.format(n = name, args = arg_list(fun, False)),
                 'typedef int (* resp_{n}_handler_t)({r});'.format(r = rett if rett != 'void' else '', n = name),
                 'int func_{f}_register(func_{f}_handler_t);'.format(f = name),
                 'int resp_{f}_register(resp_{f}_handler_t);'.format(f = name),
                 'int func_{f}_marshal(uint8_t *, ssize_t sz{args});'.format(f = name, args = ', ' + a if a else ''),
+                'int resp_{f}_marshal(uint8_t *, ssize_t sz{args});'.format(f = name, args = ', ' + rett if rett != 'void' else ''),
                 ]))
     return funcs;
 
