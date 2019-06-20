@@ -68,7 +68,7 @@ def gen_funcs(ast):
                 'typedef int (resp_{n}_handler_t *)({r});'.format(r = rett if rett != 'void' else '', n = name),
                 'int func_{f}_register(func_{f}_handler_t);'.format(f = name),
                 'int resp_{f}_register(resp_{f}_handler_t);'.format(f = name),
-                'int func_{f}_marshal(uint8_t *{args})'.format(f = name, args = ', ' + a if a else ''),
+                'int func_{f}_marshal(uint8_t *, ssize_t sz{args})'.format(f = name, args = ', ' + a if a else ''),
                 ]))
     return funcs;
 
