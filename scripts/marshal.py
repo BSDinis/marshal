@@ -52,11 +52,13 @@ def options():
         what_to_print = 1;
 
 
-    namespaces = [args.n[0] for _ in args.code]
-    if args.n == None and args.code:
-        namespaces = [f.split('/')[-1].split('.')[0] for f in args.code]
-    elif namespaces[0]:
-        namespaces = [n + '_' for n in namespaces];
+    if args.n == None:
+        if args.code:
+            namespaces = [f.split('/')[-1].split('.')[0]+'_' for f in args.code]
+        else:
+            namespaces = ['' for _ in args.code]
+    else:
+        namespaces = [args.n[0] + '_' for n in args.code];
 
     return in_files, headers, codes, what_to_print, namespaces
 
