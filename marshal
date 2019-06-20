@@ -2,13 +2,14 @@
 """ Marshal Compiler """
 
 import sys
-import scanner
-import ast
-import visit_c_prot
-import visit_c_header
-import visit_c_code
 import argparse
 import os
+
+import lex.scanner as scanner
+import syntax.ast as ast
+import visit.visit_c_prot as visit_c_prot
+import visit.visit_c_header as visit_c_header
+import visit.visit_c_code as visit_c_code
 
 def options():
     def get_ext_out(arg, files, has_input, print_all, prot, ext):

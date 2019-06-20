@@ -89,4 +89,3 @@ def scan(cin):
 if __name__ == '__main__':
     print(scan(sys.stdin))
     sys.exit(0)
-
