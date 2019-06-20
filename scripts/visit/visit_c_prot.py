@@ -21,13 +21,13 @@ def gen_type(t):
 def gen_struct(s):
     return gen_typename(s['typedef'], True)
 
-def gen_func(f):
+def gen_func(f, namespace):
     return '\n'.join([
         '// function {n}'.format(n = f['name']),
         'static int func_{n}_parse_exec(uint8_t *cmd , ssize_t);'.format(n = f['name']),
         'static int resp_{n}_parse_exec(uint8_t *resp, ssize_t);'.format(n = f['name']),
-        'static func_{n}_handler_t func_{n}_handler = NULL;'.format(n = f['name']),
-        'static resp_{n}_handler_t resp_{n}_handler = NULL;'.format(n = f['name']),
+        'static {ns}func_{n}_handler_t func_{n}_handler = NULL;'.format(ns = namespace, n = f['name']),
+        'static {ns}resp_{n}_handler_t resp_{n}_handler = NULL;'.format(ns = namespace, n = f['name']),
         ])
 
 def generate(ast, namespace):
@@ -46,7 +46,7 @@ def generate(ast, namespace):
 
     if ast['funcs']:
         for func in ast['funcs']:
-            funcs.append(gen_func(func))
+            funcs.append(gen_func(func, space))
 
     code = str()
     for frag in [types, structs, typedefs, funcs]:
