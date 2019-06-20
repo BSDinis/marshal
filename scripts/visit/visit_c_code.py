@@ -303,7 +303,7 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
         def resp_f_register(f):
             code = \
 '''
-int {ns}resp_{f}_register(resp_{f}_handler_t handler)
+int {ns}resp_{f}_register({ns}resp_{f}_handler_t handler)
 {{
   resp_{f}_handler = handler;
   return 0;
@@ -314,7 +314,7 @@ int {ns}resp_{f}_register(resp_{f}_handler_t handler)
         def func_f_register(f):
             code = \
 '''
-int {ns}func_{f}_register(func_{f}_handler_t handler)
+int {ns}func_{f}_register({ns}func_{f}_handler_t handler)
 {{
   func_{f}_handler = handler;
   return 0;
