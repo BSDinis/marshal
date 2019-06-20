@@ -246,7 +246,7 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
 
             code += \
 '''
-  return func_f_handler({a});
+  return func_{f}_handler({a});
 }}
 '''
             return code.format(f = name, a = ', '.join([arg[1] for arg in args]))
@@ -290,7 +290,7 @@ int resp_{f}_marshal(uint8_t * cmd, ssize_t sz{rarg})
             elif rett in ast['types']:
                 code += '  if (marshall_{typ_}(&ptr, &sz, ret) != 0)\n    return -1;\n'.format(typ_ = rett.replace(' ', '_'))
             else:
-                code += '  if (marshall_{typ_}(&ptr, &sz, &{ret}) != 0)\n    return -1;\n'.format(typ_ = rett.replace(' ', '_'))
+                code += '  if (marshall_{typ_}(&ptr, &sz, &ret) != 0)\n    return -1;\n'.format(typ_ = rett.replace(' ', '_'))
             code += \
 '''
   return 0;
