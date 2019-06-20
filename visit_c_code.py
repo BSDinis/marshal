@@ -3,6 +3,8 @@
 import sys
 import scanner
 import ast
+from ast import struct_size;
+from ast import fun_size;
 
 
 def gen_types(ast):
@@ -130,6 +132,37 @@ def gen_structs(ast):
     return structs;
 
 def gen_funcs(ast):
+    def func_resp_sz(ast):
+        rett = [f['return_t'] for f in ast['funcs']];
+        def gen_size(t):
+            if t == 'void':
+                return ''
+            elif t in ast['types']:
+                return ' + sizeof({r})'.format(r = t)
+            else:
+                return ' + ' + struct_size(next(s for s in ast['structs'] if s['typedef'] == t))
+
+        resp_sz = ['sizeof(uint8_t)' + gen_size(t) for t in rett];
+        code = \
+'''
+ssize_t func_resp_sz(uint8_t code)
+{
+  switch (code) {
+'''
+        for fcode, sz in enumerate(resp_sz):
+            code += '    case {c}:\n      return {s};\n'.format(c = fcode, s = sz);
+
+        code += \
+'''    default:
+      return -1;
+  }
+  return -1;
+}
+'''
+        return code
+
+
+
     def gen_func(f):
         name = f['name'];
         args = f['args'];
@@ -173,7 +206,9 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
 }}'''
             return code.format(f = name, a = ', '.join([arg[1] for arg in args]))
 
-        return resp_parse_exec(f)
+
+
+        return func_resp_sz(ast)
 
 
 
