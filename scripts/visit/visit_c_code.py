@@ -224,6 +224,7 @@ static int resp_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
 
   uint32_t __ticket = 0;
   if (unmarshal_uint32_t(&ptr, &sz, &__ticket)) return -1;
+
   {typ} ret;
   if (unmarshal_{typ_}(&ptr, &sz, &ret) != 0) return -1;
 
@@ -257,7 +258,7 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
   return func_{f}_handler({a});
 }}
 '''
-            return code.format(f = name, a = ', '.join([arg[1] for arg in [['', '__ticket'] + args]]))
+            return code.format(f = name, a = ', '.join([arg[1] for arg in [('', '__ticket')] + args]))
 
         def resp_f_register(f):
             code = \
@@ -293,16 +294,15 @@ int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz, uint32_t ticket{rarg})
   uint8_t * ptr = cmd + 1;
   sz -= 1;
 
-  if (marshal_uint32_t(&ptr, &sz, ticket) != 0)
-    return -1
+  if (marshal_uint32_t(&ptr, &sz, ticket) != 0) return -1
 
 '''
             if rett == 'void':
                 pass
             elif rett in ast['types']:
-                code += '  if (marshal_{typ_}(&ptr, &sz, ret) != 0)\n    return -1;\n'.format(typ_ = rett.replace(' ', '_'))
+                code += '  if (marshal_{typ_}(&ptr, &sz, ret) != 0) return -1;\n'.format(typ_ = rett.replace(' ', '_'))
             else:
-                code += '  if (marshal_{typ_}(&ptr, &sz, &ret) != 0)\n    return -1;\n'.format(typ_ = rett.replace(' ', '_'))
+                code += '  if (marshal_{typ_}(&ptr, &sz, &ret) != 0) return -1;\n'.format(typ_ = rett.replace(' ', '_'))
             code += \
 '''
   return 0;
@@ -322,17 +322,16 @@ int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz, uint32_t ticket{aargs})
   uint8_t * ptr = cmd + 1;
   sz -= 1;
 
-  if (marshal_uint32_t(&ptr, &sz, ticket) != 0)
-    return -1
+  if (marshal_uint32_t(&ptr, &sz, ticket) != 0) return -1
 
 '''
             for arg in args:
                 if arg[0] == 'void':
                     pass
                 elif arg[0] in ast['types']:
-                    code += '  if (marshal_{typ_}(&ptr, &sz, {argname}) != 0)\n    return -1;\n'.format(typ_ = arg[0].replace(' ', '_'), argname = arg[1])
+                    code += '  if (marshal_{typ_}(&ptr, &sz, {argname}) != 0) return -1;\n'.format(typ_ = arg[0].replace(' ', '_'), argname = arg[1])
                 else:
-                    code += '  if (marshal_{typ_}(&ptr, &sz, &{argname}) != 0)\n    return -1;\n'.format(typ_ = arg[0].replace(' ', '_'), argname = arg[1])
+                    code += '  if (marshal_{typ_}(&ptr, &sz, &{argname}) != 0) return -1;\n'.format(typ_ = arg[0].replace(' ', '_'), argname = arg[1])
             code += \
 '''
   return 0;
