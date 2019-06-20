@@ -222,10 +222,12 @@ static int resp_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
   uint8_t * ptr = cmd + 1;
   sz -= 1;
 
+  uint32_t __ticket = 0;
+  if (unmarshal_uint32_t(&ptr, &sz, &__ticket)) return -1;
   {typ} ret;
   if (unmarshal_{typ_}(&ptr, &sz, &ret) != 0) return -1;
 
-  return resp_f_handler(ret);
+  return resp_f_handler(__ticket, ret);
 }}
 '''
             return code.format(f = name, typ = f['return_t'], typ_ = f['return_t'].replace(' ', '_'))
@@ -239,6 +241,9 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
 
   uint8_t * ptr = cmd + 1;
   sz -= 1;
+
+  uint32_t __ticket = 0;
+  if (unmarshal_uint32_t(&ptr, &sz, &__ticket)) return -1;
 '''
             for arg in args:
                 code += \
@@ -252,7 +257,7 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
   return func_{f}_handler({a});
 }}
 '''
-            return code.format(f = name, a = ', '.join([arg[1] for arg in args]))
+            return code.format(f = name, a = ', '.join([arg[1] for arg in [['', '__ticket'] + args]]))
 
         def resp_f_register(f):
             code = \
@@ -279,7 +284,7 @@ int {ns}func_{f}_register(func_{f}_handler_t handler)
         def resp_f_marshal(f, fcode):
             code = \
 '''
-int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz{rarg})
+int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz, uint32_t ticket{rarg})
 {{
   if (!cmd || sz < 1) return -1;
 
@@ -287,6 +292,10 @@ int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz{rarg})
 
   uint8_t * ptr = cmd + 1;
   sz -= 1;
+
+  if (marshal_uint32_t(&ptr, &sz, ticket) != 0)
+    return -1
+
 '''
             if rett == 'void':
                 pass
@@ -304,7 +313,7 @@ int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz{rarg})
         def func_f_marshal(f, fcode):
             code = \
 '''
-int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz{aargs})
+int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz, uint32_t ticket{aargs})
 {{
   if (!cmd || sz < 1) return -1;
 
@@ -312,6 +321,10 @@ int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz{aargs})
 
   uint8_t * ptr = cmd + 1;
   sz -= 1;
+
+  if (marshal_uint32_t(&ptr, &sz, ticket) != 0)
+    return -1
+
 '''
             for arg in args:
                 if arg[0] == 'void':
