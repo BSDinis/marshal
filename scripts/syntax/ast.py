@@ -128,7 +128,7 @@ def make_ast(stmts):
             'structs': list(),
             'funcs': list(),
             'typedefs': list(),
-            'includes': {'<stddef.h>', '<stdint.h>', '<stdlib.h>'},
+            'includes': {'<arpa/inet.h>', '<stddef.h>', '<stdint.h>', '<stdlib.h>'},
             'defines': list(),
     };
     for stmt in stmts:
