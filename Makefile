@@ -2,7 +2,7 @@
 test:
 	@for f in $$(ls test/*.m); \
 	do echo "running $$f"; \
-	./marshal $$f; \
+	python3 scripts/marshal.py $$f; \
 	done;
 
 .PHONY: build
