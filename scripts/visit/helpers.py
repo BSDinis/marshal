@@ -1,5 +1,8 @@
 """ Type helping """
 
+def linearize_type(t):
+    return t.replace(' ', '_').replace('[', '_').replace(']', '')
+
 def network_convert(ast, typ, to_network):
     """
     convert type to network order

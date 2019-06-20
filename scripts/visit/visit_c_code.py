@@ -7,7 +7,6 @@ from visit.helpers import *;
 
 def gen_types(ast, namespace):
     def gen_type_marshal(typename):
-        typename_u = typename.replace(' ', '_')
         code = str()
         variable = str()
         code  = \
@@ -26,10 +25,10 @@ def gen_types(ast, namespace):
 
   return 0;
 }}'''
-        return code.format(t_ = typename_u, t = typename)
+        return code.format(t_ = linearize_type(typename), t = typename)
 
     def gen_type_unmarshal(typename):
-        typename_u = typename.replace(' ', '_')
+        typename_u = typename.replace(' ', '_').replace('[', '_').replace(']', '')
         code = str()
         variable = str()
         code  = \
@@ -48,7 +47,7 @@ def gen_types(ast, namespace):
 
   return 0;
 }}'''
-        return code.format(t_ = typename_u, t = typename)
+        return code.format(t_ = linearize_type(typename), t = typename)
 
 
     types = list();
@@ -84,7 +83,7 @@ def gen_structs(ast):
             if any(struct['typedef'] == m[0] for struct in ast['structs']):
                 code += '  ret = marshal_{t}(ptr, rem, &(val->{data_m}));\n'.format(t = m[0], data_m = m[1]);
             else:
-                code += '  ret = marshal_{t}(ptr, rem, val->{data_m});\n'.format(t = m[0], data_m = m[1]);
+                code += '  ret = marshal_{t}(ptr, rem, val->{data_m});\n'.format(t = linearize_type(m[0]), data_m = m[1]);
             code += '  if (ret) return ret; // error\n\n'
 
         code += \
@@ -114,7 +113,7 @@ def gen_structs(ast):
 
 '''
         for m in s['members']:
-            code += '  ret = unmarshal_{t}(ptr, rem, &(val->{data_m}));\n'.format(t = m[0], data_m = m[1]);
+            code += '  ret = unmarshal_{t}(ptr, rem, &(val->{data_m}));\n'.format(t = linearize_type(m[0]), data_m = m[1]);
             code += '  if (ret) return ret; // error\n\n'
 
         code += \
@@ -231,7 +230,7 @@ static int resp_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
   return resp_f_handler(__ticket, ret);
 }}
 '''
-            return code.format(f = name, typ = f['return_t'], typ_ = f['return_t'].replace(' ', '_'))
+            return code.format(f = name, typ = f['return_t'], typ_ = linearize_type(f['return_t']))
 
         def func_f_parse_exec(f):
             code = \
@@ -251,7 +250,7 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
 '''
   {typ} {argname};
   if (unmarshal_{typ_}(&ptr, &sz, &{argname}) != 0) return -1;
-'''.format(typ = arg[0], typ_ = arg[0].replace(' ', '_'), argname = arg[1])
+'''.format(typ = arg[0], typ_ = linearize_type(arg[0]), argname = arg[1])
 
             code += \
 '''
@@ -300,9 +299,9 @@ int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz, uint32_t ticket{rarg})
             if rett == 'void':
                 pass
             elif rett in ast['types']:
-                code += '  if (marshal_{typ_}(&ptr, &sz, ret) != 0) return -1;\n'.format(typ_ = rett.replace(' ', '_'))
+                code += '  if (marshal_{typ_}(&ptr, &sz, ret) != 0) return -1;\n'.format(typ_ = linearize_type(rett))
             else:
-                code += '  if (marshal_{typ_}(&ptr, &sz, &ret) != 0) return -1;\n'.format(typ_ = rett.replace(' ', '_'))
+                code += '  if (marshal_{typ_}(&ptr, &sz, &ret) != 0) return -1;\n'.format(typ_ = linearize_type(rett))
             code += \
 '''
   return 0;
@@ -329,9 +328,9 @@ int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz, uint32_t ticket{aargs})
                 if arg[0] == 'void':
                     pass
                 elif arg[0] in ast['types']:
-                    code += '  if (marshal_{typ_}(&ptr, &sz, {argname}) != 0) return -1;\n'.format(typ_ = arg[0].replace(' ', '_'), argname = arg[1])
+                    code += '  if (marshal_{typ_}(&ptr, &sz, {argname}) != 0) return -1;\n'.format(typ_ = linearize_type(arg[0]), argname = arg[1])
                 else:
-                    code += '  if (marshal_{typ_}(&ptr, &sz, &{argname}) != 0) return -1;\n'.format(typ_ = arg[0].replace(' ', '_'), argname = arg[1])
+                    code += '  if (marshal_{typ_}(&ptr, &sz, &{argname}) != 0) return -1;\n'.format(typ_ = linearize_type(arg[0]), argname = arg[1])
             code += \
 '''
   return 0;

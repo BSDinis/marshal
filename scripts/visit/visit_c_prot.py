@@ -11,8 +11,8 @@ def gen_typename(typename, ref):
     variable = str()
     if ref: variable = 'const {t} *'.format(t = typename);
     else:   variable = '{t}'.format(t = typename);
-    code  = 'static int marshal_{t_}(uint8_t ** ptr, ssize_t * rem, {v} val);\n'.format(t_ = typename_u, v=variable)
-    code += 'static int unmarshal_{t_}(uint8_t ** ptr, ssize_t * rem, {t} * val);'.format(t_ = typename_u, t=typename)
+    code  = 'static int marshal_{t_}(uint8_t ** ptr, ssize_t * rem, {v} val);\n'.format(t_ = linearize_type(typename), v=variable)
+    code += 'static int unmarshal_{t_}(uint8_t ** ptr, ssize_t * rem, {t} * val);'.format(t_ = linearize_type(typename), t=typename)
     return code
 
 def gen_type(t):
