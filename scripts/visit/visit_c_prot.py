@@ -46,7 +46,7 @@ def generate(ast, namespace):
 
     if ast['funcs']:
         for func in ast['funcs']:
-            funcs.append(gen_func(func, space))
+            funcs.append(gen_func(func, namespace))
 
     code = str()
     for frag in [types, structs, typedefs, funcs]:
