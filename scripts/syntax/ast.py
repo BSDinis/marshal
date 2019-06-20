@@ -118,7 +118,7 @@ def make_node(ast, stmt):
 
 def make_ast(stmts):
     ast = {
-            'types': set(),
+            'types': {'uint32_t'}
             'structs': list(),
             'funcs': list(),
             'typedefs': list(),
@@ -156,11 +156,6 @@ def make_ast(stmts):
         for t in f['args']:
             if t[0] != 'void' and not any(t[0] == s['typedef'] for s in ast['structs']):
                 ast['types'].add(t[0])
-
-
-
-
-
 
     return ast;
 
