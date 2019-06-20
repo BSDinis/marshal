@@ -170,6 +170,20 @@ def make_ast(stmts):
                 pass
             elif m[0] not in ast['types']:
                 ast['types'].add(m[0])
+
+    for f in ast['funcs']:
+        if f['return_t'] != 'void' and not any(t[0] == s['typedef'] for s in ast['structs']):
+            ast['types'].add(f['return_t'])
+
+        for t in f['args']:
+            if t[0] != 'void' and not any(t[0] == s['typedef'] for s in ast['structs']):
+                ast['types'].add(t[0])
+
+
+
+
+
+
     return ast;
 
 if __name__ == '__main__':
