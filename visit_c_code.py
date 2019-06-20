@@ -150,7 +150,7 @@ ssize_t func_resp_sz(uint8_t code)
   switch (code) {
 '''
         for fcode, sz in enumerate(resp_sz):
-            code += '    case {c}:\n      return {s};\n'.format(c = fcode, s = sz);
+            code += '    case {c}:\n      return {s};\n'.format(c = fcode + 1, s = sz);
 
         code += \
 '''    default:
@@ -161,12 +161,52 @@ ssize_t func_resp_sz(uint8_t code)
 '''
         return code
 
+    def resp_parse_exec(ast):
+        code = \
+'''
+int resp_parse_exec(uint8_t * resp, ssize_t sz)
+{
+  if (!resp || sz < 1) return -1;
+  memset(resp, 0, sz);
+  switch (resp[0]) {
+'''
+
+        for fcode, fun in enumerate(ast['funcs']):
+            code += '    case {c}:\n      return resp_{f}_parse_exec(resp, sz);\n'.format(c = fcode + 1, f = fun['name'])
+        code += \
+'''    default:
+      return -1;
+  }
+  return 0;
+}
+'''
+        return code
+    def func_parse_exec(ast):
+        code = \
+'''
+int func_parse_exec(uint8_t * cmd, ssize_t sz)
+{
+  if (!cmd || sz < 1) return -1;
+  memset(cmd, 0, sz);
+  switch (cmd[0]) {
+'''
+
+        for fcode, fun in enumerate(ast['funcs']):
+            code += '    case {c}:\n      return func_{f}_parse_exec(cmd, sz);\n'.format(c = fcode + 1, f = fun['name'])
+        code += \
+'''    default:
+      return -1;
+  }
+  return 0;
+}
+'''
+        return code
 
 
     def gen_func(f):
         name = f['name'];
         args = f['args'];
-        def resp_parse_exec(f):
+        def resp_f_parse_exec(f):
             code = \
 '''
 static int resp_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
@@ -183,7 +223,7 @@ static int resp_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
 }}'''
             return code.format(f = name, typ = f['return_t'], typ_ = f['return_t'].replace(' ', '_'))
 
-        def func_parse_exec(f):
+        def func_f_parse_exec(f):
             code = \
 '''
 static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
@@ -206,9 +246,8 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
 }}'''
             return code.format(f = name, a = ', '.join([arg[1] for arg in args]))
 
+        return ''
 
-
-        return func_resp_sz(ast)
 
 
 
@@ -217,7 +256,7 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
         for func in ast['funcs']:
             funcs.append('\n'.join([
                 '\n\n// function {f}'.format(f = func['name']),
-                gen_func(func)
+                resp_parse_exec(ast)
                 ]))
 
     return funcs
