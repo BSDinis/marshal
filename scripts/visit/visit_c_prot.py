@@ -1,9 +1,9 @@
 """ Marshal C prototype visitor """
 
 import sys
-import lex.scanner
-import syntax.ast
-from visit.helpers import *
+import scripts.lex.scanner
+import scripts.syntax.ast
+from scripts.visit.helpers import *
 
 def gen_typename(typename, ref):
     typename_u = typename.replace(' ', '_')

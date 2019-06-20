@@ -1,9 +1,9 @@
 """ Marshal C source file visitor """
 
 import sys
-import lex.scanner
-import syntax.ast
-from visit.helpers import *;
+import scripts.lex.scanner
+import scripts.syntax.ast
+from scripts.visit.helpers import *;
 
 def gen_types(ast):
     def gen_type_marshal(typename):
@@ -16,6 +16,10 @@ def gen_types(ast):
   if (ptr == NULL) return 1;
   if (rem && *rem < sizeof({t})) return -1;
 
+'''
+        code  += network_convert(ast, typename, True).format(name = 'val')
+        code  += \
+'''
   memcpy(*ptr, &val, sizeof({t}));
 
   *ptr += sizeof({t});
@@ -36,7 +40,10 @@ def gen_types(ast):
   if (rem && *rem < sizeof({t})) return -1;
 
   memcpy(val, *ptr, sizeof({t}));
-
+'''
+        code  += network_convert(ast, typename, False).format(name = '*val')
+        code  += \
+'''
   *ptr += sizeof({t});
   if (rem) *rem -= sizeof({t});
 

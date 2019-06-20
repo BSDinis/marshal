@@ -1,5 +1,30 @@
 """ Type helping """
 
+def network_convert(ast, typ, to_network):
+    """
+    convert type to network order
+    basically checks if the type is like int (ie, int, long, or typedef to it)
+    this needs to be formatted (with val)
+    """
+    real_typ = next(t['old'] for t in ast['typedefs'] if t['new'] == typ, typ);
+    if 'int' in real_typ or 'long' in real_typ or 'short' in real_typ:
+        if '64' in real_typ or 'long long' in real_typ:
+            return SyntaxError('Cannot convert 64 bit type {t} {qual} ordering'.format(t = real_typ, qual = 'network' if to_network else 'host'))
+        elif '32' in real_typ or real_typ == 'int':
+            if to_network:
+                return '  {name} = htonl({name});\n'
+            else
+                return '  {name} = ntohl({name});\n'
+        elif '16' in real_typ or 'short' in real_typ:
+            if to_network:
+                return '  {name} = htons({name});\n'
+            else
+                return '  {name} = ntohs({name});\n'
+    return '';
+
+
+
+
 def struct_size(s):
     return ' + '.join(['sizeof({t})'.format(t = m[0]) for m in s['members']])
 
