@@ -6,9 +6,10 @@ import syntax.ast
 from visit.helpers import *;
 
 def gen_types(ast, namespace):
+    def find_last(s, ch): return [p for p, c in enumerate(s) if c == ch][-1];
     def gen_array_marshal(typename):
         size = typename.split('[')[1].split(']')[0]
-        base_type = typename.split('[')[0]
+        prev_type = typename[:find_last(typename, '[')]
         code  = \
 '''static int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {param})
 {{
@@ -23,12 +24,12 @@ def gen_types(ast, namespace):
         return code.format(t_ = linearize_type(typename),
                 param = gen_type_decl([typename, 'const val']),
                 sz = size,
-                bt = linearize_type(base_type)
+                bt = linearize_type(prev_type)
                 )
 
     def gen_array_unmarshal(typename):
         size = typename.split('[')[1].split(']')[0]
-        base_type = typename.split('[')[0]
+        prev_type = typename[:find_last(typename, '[')]
         code  = \
 '''static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {param})
 {{
@@ -43,7 +44,7 @@ def gen_types(ast, namespace):
         return code.format(t_ = linearize_type(typename),
                 param = gen_type_decl([typename, 'val']),
                 sz = size,
-                bt = linearize_type(base_type)
+                bt = linearize_type(prev_type)
                 )
 
 
@@ -268,7 +269,7 @@ static int resp_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
   {typ} ret;
   if (unmarshal_{typ_}(&ptr, &sz, &ret) != 0) return -1;
 
-  return resp_f_handler(__ticket, ret);
+  return resp_{f}_handler(__ticket, ret);
 }}
 '''
             return code.format(f = name, typ = f['return_t'], typ_ = linearize_type(f['return_t']))
@@ -289,9 +290,9 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
             for arg in args:
                 code += \
 '''
-  {typ} {argname};
-  if (unmarshal_{typ_}(&ptr, &sz, &{argname}) != 0) return -1;
-'''.format(typ = arg[0], typ_ = linearize_type(arg[0]), argname = arg[1])
+  {typ_decl};
+  if (unmarshal_{typ_}(&ptr, &sz, {argname}) != 0) return -1;
+'''.format(typ_decl = gen_type_decl([arg[0] , arg[1]]), typ_ = linearize_type(arg[0]), argname = '&'+arg[1] if '[' not in arg[0] else arg[1] )
 
             code += \
 '''

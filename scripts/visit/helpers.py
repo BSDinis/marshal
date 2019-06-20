@@ -76,7 +76,6 @@ def gen_type_decl(t_list):
         first = slic[0]
         last = slic[1]
         s = s[:first] + s[last:] + s[first:last]
-    print(s)
     return s;
 
 def arg_list(f, full):
