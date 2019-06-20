@@ -27,11 +27,11 @@ def options():
         return [None for _ in files]
 
     parser = argparse.ArgumentParser(description='Marshal Compiler')
-    parser.add_argument('code', nargs='*', help='marshal src files .m')
+    parser.add_argument('code', metavar='interface.m', nargs='*', help='marshal source files')
     parser.add_argument('-H', metavar='header.h', nargs='?', default=False, help='generate C header code; optionally generates a specific .h file')
     parser.add_argument('-c', metavar='source.c', nargs='?', default=False, help='generate C source code; optionally generates a specific .c file')
     parser.add_argument('-p', action='store_true', help='generate function prototypes for the C file')
-    parser.add_argument('-n', metavar='namespace', nargs=1, default=None, help='give namespace name')
+    parser.add_argument('-n', metavar='namespace', nargs=1, default=None, help='prefix all public facing functions with namespace_ ; the default is the name of the file (minus extension)')
 
     args = parser.parse_args()
     in_files = [open(c, "r") for c in args.code]
