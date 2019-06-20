@@ -43,7 +43,7 @@ def options():
     headers = get_ext_out(args.H, args.code, has_input, print_all, False, 'h')
     codes   = get_ext_out(args.c, args.code, has_input, print_all, args.p, 'c')
     what_to_print = 0; # print nothing
-    if args.p and args.c or print_all:
+    if (args.p and args.c) or print_all:
         what_to_print = 3
     elif args.p:
         what_to_print = 2;
