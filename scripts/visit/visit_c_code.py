@@ -6,9 +6,49 @@ import syntax.ast
 from visit.helpers import *;
 
 def gen_types(ast, namespace):
+    def gen_array_marshal(typename):
+        size = typename.split('[')[1].split(']')[0]
+        base_type = typename.split('[')[0]
+        code  = \
+'''static int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const val)
+{{
+  for (ssize_t i = 0; i < {sz}; i++) {{
+    int ret = marshal_{bt}(ptr, rem, val[i]);
+    if (ret) return ret;
+  }}
+
+  return 0;
+}}
+'''
+        return code.format(t_ = linearize_type(typename),
+                t = typename,
+                sz = size,
+                bt = linearize_type(base_type)
+                )
+
+    def gen_array_unmarshal(typename):
+        size = typename.split('[')[1].split(']')[0]
+        base_type = typename.split('[')[0]
+        code  = \
+'''static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * const val)
+{{
+  for (ssize_t i = 0; i < {sz}; i++) {{
+    int ret = unmarshal_{bt}(ptr, rem, &val[i]);
+    if (ret) return ret;
+  }}
+
+  return 0;
+}}
+'''
+        return code.format(t_ = linearize_type(typename),
+                t = typename,
+                sz = size,
+                bt = linearize_type(base_type)
+                )
+
+
+
     def gen_type_marshal(typename):
-        code = str()
-        variable = str()
         code  = \
 '''static int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const val)
 {{
@@ -29,8 +69,6 @@ def gen_types(ast, namespace):
 
     def gen_type_unmarshal(typename):
         typename_u = typename.replace(' ', '_').replace('[', '_').replace(']', '')
-        code = str()
-        variable = str()
         code  = \
 '''static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * const val)
 {{
@@ -53,11 +91,18 @@ def gen_types(ast, namespace):
     types = list();
     if ast['types']:
         for typ in ast['types']:
-            types.append('\n'.join([
-                '// {t}'.format(t = typ),
-                gen_type_marshal(typ),
-                gen_type_unmarshal(typ)
-                ]))
+            if '[' not in typ:
+                types.append('\n'.join([
+                    '// {t}'.format(t = typ),
+                    gen_type_marshal(typ),
+                    gen_type_unmarshal(typ)
+                    ]))
+            else:
+                types.append('\n'.join([
+                    '// {t}'.format(t = typ),
+                    gen_array_marshal(typ),
+                    gen_array_unmarshal(typ)
+                    ]))
 
     return types;
 
@@ -66,8 +111,6 @@ def gen_structs(ast):
         typename = s['typedef']
         typename_u = typename.replace(' ', '_')
         sz_decl = 'ssize_t const sz = ' + ' + '.join(['sizeof(' + m[0] + ')' for m in s['members']])
-        code = str()
-        variable = str()
         code = \
 '''static int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const * val)
 {{
@@ -99,8 +142,6 @@ def gen_structs(ast):
         typename = s['typedef']
         typename_u = typename.replace(' ', '_')
         sz_decl = 'const ssize_t sz = ' + ' + '.join(['sizeof(' + m[0] + ')'  for m in s['members']])
-        code = str()
-        variable = str()
         code = \
 '''static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * val)
 {{
