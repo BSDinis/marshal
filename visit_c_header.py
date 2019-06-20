@@ -5,6 +5,7 @@ import scanner
 import ast
 from ast import arg_list
 from ast import fun_size
+from ast import fun_ret_size
 
 def gen_includes(ast, to_file):
     includes = str()
@@ -62,8 +63,9 @@ def gen_funcs(ast):
             a = arg_list(fun, True)
             funcs.append('\n'.join([
                 '// function {f}'.format(f = name),
-                'ssize_t const func_{f}_sz = {sz};'.format(f = name, sz = fun_size(ast, fun)),
                 'uint8_t const func_{f}_code = {c};'.format(f = name, c = code + 1),
+                'ssize_t const func_{f}_sz = {sz};'.format(f = name, sz = fun_size(ast, fun)),
+                'ssize_t const resp_{f}_sz = {sz};'.format(f = name, sz = fun_ret_size(ast, fun)),
                 'typedef int (* func_{n}_handler_t)({args});'.format(n = name, args = arg_list(fun, False)),
                 'typedef int (* resp_{n}_handler_t)({r});'.format(r = rett if rett != 'void' else '', n = name),
                 'int func_{f}_register(func_{f}_handler_t);'.format(f = name),

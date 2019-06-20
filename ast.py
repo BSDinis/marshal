@@ -28,6 +28,18 @@ def fun_size(ast, f):
 
     return ' + '.join(sizes);
 
+def fun_ret_size(ast, f):
+    sizes = ['sizeof(uint8_t)']
+    if f['return_t'] in ast['types']:
+        sizes.append('sizeof('+f['return_t']+')')
+    elif any(f['return_t'] == s['typedef'] for s in ast['structs']):
+        sizes.append(struct_size(next(s for s in ast['structs'] if f['return_t'] == s['typedef'])))
+    else:
+        ast['types'].add(f['return_t'])
+        sizes.append('sizeof('+f['return_t']+')')
+
+    return ' + '.join(sizes);
+
 def arg_list(f, full):
     if full:
         return ', '.join(' '.join(arg) for arg in f['args'])
