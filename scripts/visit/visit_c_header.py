@@ -58,7 +58,7 @@ def gen_funcs(ast, namespace):
         for code, fun in enumerate(ast['funcs']):
             rett = fun['return_t']
             name = fun['name']
-            a = arg_list(fun, True)
+            a = arg_list(fun, False)
             funcs.append('\n'.join([
                 '// function {f}'.format(f = name),
                 'uint8_t const {ns}func_{f}_code = {c};'.format(ns = namespace, f = name, c = code + 1),
