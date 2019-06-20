@@ -5,5 +5,7 @@ test:
 	./marshal $$f; \
 	done;
 
-.PHONY: install
-install:
+.PHONY: build
+build:
+	pyinstaller --onefile scripts/marshal.py
+	cp dist/marshal .
