@@ -1,9 +1,9 @@
 """ Marshal C prototype visitor """
 
 import sys
-import scripts.lex.scanner
-import scripts.syntax.ast
-from scripts.visit.helpers import *
+import lex.scanner
+import syntax.ast
+from visit.helpers import *
 
 def gen_typename(typename, ref):
     typename_u = typename.replace(' ', '_')
@@ -11,8 +11,8 @@ def gen_typename(typename, ref):
     variable = str()
     if ref: variable = 'const {t} *'.format(t = typename);
     else:   variable = '{t}'.format(t = typename);
-    code  = 'static int marshall_{t_}(uint8_t ** ptr, ssize_t * rem, {v} val);\n'.format(t_ = typename_u, v=variable)
-    code += 'static int unmarshall_{t_}(uint8_t ** ptr, ssize_t * rem, {t} * val);'.format(t_ = typename_u, t=typename)
+    code  = 'static int marshal_{t_}(uint8_t ** ptr, ssize_t * rem, {v} val);\n'.format(t_ = typename_u, v=variable)
+    code += 'static int unmarshal_{t_}(uint8_t ** ptr, ssize_t * rem, {t} * val);'.format(t_ = typename_u, t=typename)
     return code
 
 def gen_type(t):

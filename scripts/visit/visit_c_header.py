@@ -1,9 +1,9 @@
 """ Marshal C header file visitor """
 
 import sys
-import scripts.lex.scanner
-import scripts.syntax.ast
-from scripts.visit.helpers import *;
+import lex.scanner
+import syntax.ast
+from visit.helpers import *;
 
 def gen_includes(ast, to_file):
     includes = str()

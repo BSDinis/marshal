@@ -1,9 +1,9 @@
 """ Marshal C source file visitor """
 
 import sys
-import scripts.lex.scanner
-import scripts.syntax.ast
-from scripts.visit.helpers import *;
+import lex.scanner
+import syntax.ast
+from visit.helpers import *;
 
 def gen_types(ast):
     def gen_type_marshal(typename):
@@ -11,7 +11,7 @@ def gen_types(ast):
         code = str()
         variable = str()
         code  = \
-'''static int marshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const val)
+'''static int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const val)
 {{
   if (ptr == NULL) return 1;
   if (rem && *rem < sizeof({t})) return -1;
@@ -19,8 +19,7 @@ def gen_types(ast):
 '''
         code  += network_convert(ast, typename, True).format(name = 'val')
         code  += \
-'''
-  memcpy(*ptr, &val, sizeof({t}));
+'''  memcpy(*ptr, &val, sizeof({t}));
 
   *ptr += sizeof({t});
   if (rem) *rem -= sizeof({t});
@@ -34,7 +33,7 @@ def gen_types(ast):
         code = str()
         variable = str()
         code  = \
-'''static int unmarshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * const val)
+'''static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * const val)
 {{
   if (ptr == NULL) return 1;
   if (rem && *rem < sizeof({t})) return -1;
@@ -71,7 +70,7 @@ def gen_structs(ast):
         code = str()
         variable = str()
         code = \
-'''static int marshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const * val)
+'''static int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const * val)
 {{
   if (ptr == NULL) return 1;
 
@@ -83,9 +82,9 @@ def gen_structs(ast):
 '''
         for m in s['members']:
             if any(struct['typedef'] == m[0] for struct in ast['structs']):
-                code += '  ret = marshall_{t}(ptr, rem, &(val->{data_m}));\n'.format(t = m[0], data_m = m[1]);
+                code += '  ret = marshal_{t}(ptr, rem, &(val->{data_m}));\n'.format(t = m[0], data_m = m[1]);
             else:
-                code += '  ret = marshall_{t}(ptr, rem, val->{data_m});\n'.format(t = m[0], data_m = m[1]);
+                code += '  ret = marshal_{t}(ptr, rem, val->{data_m});\n'.format(t = m[0], data_m = m[1]);
             code += '  if (ret) return ret; // error\n\n'
 
         code += \
@@ -104,7 +103,7 @@ def gen_structs(ast):
         code = str()
         variable = str()
         code = \
-'''static int unmarshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * val)
+'''static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * val)
 {{
   if (ptr == NULL) return 1;
 
@@ -115,7 +114,7 @@ def gen_structs(ast):
 
 '''
         for m in s['members']:
-            code += '  ret = unmarshall_{t}(ptr, rem, &(val->{data_m}));\n'.format(t = m[0], data_m = m[1]);
+            code += '  ret = unmarshal_{t}(ptr, rem, &(val->{data_m}));\n'.format(t = m[0], data_m = m[1]);
             code += '  if (ret) return ret; // error\n\n'
 
         code += \
@@ -224,7 +223,7 @@ static int resp_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
   sz -= 1;
 
   {typ} ret;
-  if (unmarshall_{typ_}(&ptr, &sz, &ret) != 0) return -1;
+  if (unmarshal_{typ_}(&ptr, &sz, &ret) != 0) return -1;
 
   return resp_f_handler(ret);
 }}
@@ -245,7 +244,7 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
                 code += \
 '''
   {typ} {argname};
-  if (unmarshall_{typ_}(&ptr, &sz, &{argname}) != 0) return -1;
+  if (unmarshal_{typ_}(&ptr, &sz, &{argname}) != 0) return -1;
 '''.format(typ = arg[0], typ_ = arg[0].replace(' ', '_'), argname = arg[1])
 
             code += \
@@ -292,9 +291,9 @@ int resp_{f}_marshal(uint8_t * cmd, ssize_t sz{rarg})
             if rett == 'void':
                 pass
             elif rett in ast['types']:
-                code += '  if (marshall_{typ_}(&ptr, &sz, ret) != 0)\n    return -1;\n'.format(typ_ = rett.replace(' ', '_'))
+                code += '  if (marshal_{typ_}(&ptr, &sz, ret) != 0)\n    return -1;\n'.format(typ_ = rett.replace(' ', '_'))
             else:
-                code += '  if (marshall_{typ_}(&ptr, &sz, &ret) != 0)\n    return -1;\n'.format(typ_ = rett.replace(' ', '_'))
+                code += '  if (marshal_{typ_}(&ptr, &sz, &ret) != 0)\n    return -1;\n'.format(typ_ = rett.replace(' ', '_'))
             code += \
 '''
   return 0;
@@ -318,9 +317,9 @@ int func_{f}_marshal(uint8_t * cmd, ssize_t sz{aargs})
                 if arg[0] == 'void':
                     pass
                 elif arg[0] in ast['types']:
-                    code += '  if (marshall_{typ_}(&ptr, &sz, {argname}) != 0)\n    return -1;\n'.format(typ_ = arg[0].replace(' ', '_'), argname = arg[1])
+                    code += '  if (marshal_{typ_}(&ptr, &sz, {argname}) != 0)\n    return -1;\n'.format(typ_ = arg[0].replace(' ', '_'), argname = arg[1])
                 else:
-                    code += '  if (marshall_{typ_}(&ptr, &sz, &{argname}) != 0)\n    return -1;\n'.format(typ_ = arg[0].replace(' ', '_'), argname = arg[1])
+                    code += '  if (marshal_{typ_}(&ptr, &sz, &{argname}) != 0)\n    return -1;\n'.format(typ_ = arg[0].replace(' ', '_'), argname = arg[1])
             code += \
 '''
   return 0;
