@@ -66,8 +66,8 @@ def gen_funcs(ast, namespace):
                 'ssize_t const {ns}resp_{f}_sz = {sz};'.format(ns = namespace, f = name, sz = fun_ret_size(ast, fun)),
                 'typedef int (* {ns}func_{n}_handler_t)(uint32_t ticket{args});'.format(ns = namespace, n = name, args = ', ' + a if a else ''),
                 'typedef int (* {ns}resp_{n}_handler_t)(uint32_t ticket{r});'.format(ns = namespace, r = ', ' + rett if rett != 'void' else '', n = name),
-                'int {ns}func_{f}_register(func_{f}_handler_t);'.format(ns = namespace, f = name),
-                'int {ns}resp_{f}_register(resp_{f}_handler_t);'.format(ns = namespace, f = name),
+                'int {ns}func_{f}_register({ns}func_{f}_handler_t);'.format(ns = namespace, f = name),
+                'int {ns}resp_{f}_register({ns}resp_{f}_handler_t);'.format(ns = namespace, f = name),
                 'int {ns}func_{f}_marshal(uint8_t *, ssize_t sz, uint32_t ticket{args});'.format(ns = namespace, f = name, args = ', ' + a if a else ''),
                 'int {ns}resp_{f}_marshal(uint8_t *, ssize_t sz, uint32_t ticket{args});'.format(ns = namespace, f = name, args = ', ' + rett if rett != 'void' else ''),
                 ]))
