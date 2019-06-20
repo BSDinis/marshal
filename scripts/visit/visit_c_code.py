@@ -5,7 +5,7 @@ import lex.scanner
 import syntax.ast
 from visit.helpers import *;
 
-def gen_types(ast):
+def gen_types(ast, namespace):
     def gen_type_marshal(typename):
         typename_u = typename.replace(' ', '_')
         code = str()
@@ -135,7 +135,7 @@ def gen_structs(ast):
             ]))
     return structs;
 
-def gen_funcs(ast):
+def gen_funcs(ast, namespace):
     def func_resp_sz(ast):
         rett = [f['return_t'] for f in ast['funcs']];
         def gen_size(t):
@@ -149,9 +149,9 @@ def gen_funcs(ast):
         resp_sz = ['sizeof(uint8_t)' + gen_size(t) for t in rett];
         code = \
 '''
-ssize_t func_resp_sz(uint8_t code)
-{
-  switch (code) {
+ssize_t {ns}func_resp_sz(uint8_t code)
+{{
+  switch (code) {{
 '''
         for fcode, sz in enumerate(resp_sz):
             code += '    case {c}:\n      return {s};\n'.format(c = fcode + 1, s = sz);
@@ -159,20 +159,20 @@ ssize_t func_resp_sz(uint8_t code)
         code += \
 '''    default:
       return -1;
-  }
+  }}
   return -1;
-}
+}}
 '''
-        return code
+        return code.format(ns = namespace);
 
     def resp_parse_exec(ast):
         code = \
 '''
-int resp_parse_exec(uint8_t * const resp, ssize_t sz)
-{
+int {ns}_resp_parse_exec(uint8_t * const resp, ssize_t sz)
+{{
   if (!resp || sz < 1) return -1;
   memset(resp, 0, sz);
-  switch (resp[0]) {
+  switch (resp[0]) {{
 '''
 
         for fcode, fun in enumerate(ast['funcs']):
@@ -180,19 +180,19 @@ int resp_parse_exec(uint8_t * const resp, ssize_t sz)
         code += \
 '''    default:
       return -1;
-  }
+  }}
   return 0;
-}
+}}
 '''
-        return code
+        return code.format(ns = namespace)
     def func_parse_exec(ast):
         code = \
 '''
-int func_parse_exec(uint8_t * cmd, ssize_t sz)
-{
+int {ns}func_parse_exec(uint8_t * cmd, ssize_t sz)
+{{
   if (!cmd || sz < 1) return -1;
   memset(cmd, 0, sz);
-  switch (cmd[0]) {
+  switch (cmd[0]) {{
 '''
 
         for fcode, fun in enumerate(ast['funcs']):
@@ -200,11 +200,11 @@ int func_parse_exec(uint8_t * cmd, ssize_t sz)
         code += \
 '''    default:
       return -1;
-  }
+  }}
   return 0;
-}
+}}
 '''
-        return code
+        return code.format(ns = namespace)
 
 
     def gen_func(f, fcode):
@@ -257,29 +257,29 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
         def resp_f_register(f):
             code = \
 '''
-int resp_{f}_register(resp_{f}_handler_t handler)
+int {ns}resp_{f}_register(resp_{f}_handler_t handler)
 {{
   resp_{f}_handler = handler;
   return 0;
 }}
 '''
-            return code.format(f = name)
+            return code.format(f = name, ns = namespace)
 
         def func_f_register(f):
             code = \
 '''
-int func_{f}_register(func_{f}_handler_t handler)
+int {ns}func_{f}_register(func_{f}_handler_t handler)
 {{
   func_{f}_handler = handler;
   return 0;
 }}
 '''
-            return code.format(f = name)
+            return code.format(f = name, ns = namespace)
 
         def resp_f_marshal(f, fcode):
             code = \
 '''
-int resp_{f}_marshal(uint8_t * cmd, ssize_t sz{rarg})
+int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz{rarg})
 {{
   if (!cmd || sz < 1) return -1;
 
@@ -299,12 +299,12 @@ int resp_{f}_marshal(uint8_t * cmd, ssize_t sz{rarg})
   return 0;
 }}
 '''
-            return code.format(f = name, cd = fcode, rarg = ', ' + rett + ' ret' if rett != 'void' else '')
+            return code.format(ns = namespace, f = name, cd = fcode, rarg = ', ' + rett + ' ret' if rett != 'void' else '')
 
         def func_f_marshal(f, fcode):
             code = \
 '''
-int func_{f}_marshal(uint8_t * cmd, ssize_t sz{aargs})
+int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz{aargs})
 {{
   if (!cmd || sz < 1) return -1;
 
@@ -325,7 +325,7 @@ int func_{f}_marshal(uint8_t * cmd, ssize_t sz{aargs})
   return 0;
 }}
 '''
-            return code.format(f = name, cd = fcode, aargs = ', ' + a if a else '')
+            return code.format(ns = namespace, f = name, cd = fcode, aargs = ', ' + a if a else '')
 
         return func_f_parse_exec(f) + resp_f_parse_exec(f) +\
                 func_f_register(f) + resp_f_register(f) + \
@@ -348,10 +348,10 @@ int func_{f}_marshal(uint8_t * cmd, ssize_t sz{aargs})
 
     return funcs
 
-def generate(ast):
-    types = gen_types(ast);
+def generate(ast, namespace):
+    types = gen_types(ast, namespace);
     structs = gen_structs(ast);
-    funcs = gen_funcs(ast);
+    funcs = gen_funcs(ast, namespace);
 
 
     code = str()
@@ -363,5 +363,5 @@ def generate(ast):
 
 if __name__ == '__main__':
     ast = ast.make_ast(scanner.scan(sys.stdin));
-    print(generate(ast), end='');
+    print(generate(ast, ''), end='');
     sys.exit(0);

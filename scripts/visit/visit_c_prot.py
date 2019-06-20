@@ -30,7 +30,7 @@ def gen_func(f):
         'static resp_{n}_handler_t resp_{n}_handler = NULL;'.format(n = f['name']),
         ])
 
-def generate(ast):
+def generate(ast, namespace):
     types = list();
     structs = list();
     typedefs = list();

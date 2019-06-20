@@ -51,10 +51,11 @@ def options():
     elif args.c != False:
         what_to_print = 1;
 
+
+    namespaces = [args.n[0] for _ in args.code]
     if args.n == None and args.code:
         namespaces = [f.split('/')[-1].split('.')[0] for f in args.code]
-
-    if namespaces[0]:
+    elif namespaces[0]:
         namespaces = [n + '_' for n in namespaces];
 
     return in_files, headers, codes, what_to_print, namespaces
@@ -62,7 +63,7 @@ def options():
 def main():
     """ main compiler routine """
     cins, headers, codes, what_to_print, namespaces = options();
-    for cin, header, code, namespace in zip(cins, headers, codes, namespace):
+    for cin, header, code, namespace in zip(cins, headers, codes, namespaces):
         astree = ast.make_ast(scanner.scan(cin));
         if header:
             if header.name != '<stdout>':

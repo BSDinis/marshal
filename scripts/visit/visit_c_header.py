@@ -5,7 +5,7 @@ import lex.scanner
 import syntax.ast
 from visit.helpers import *;
 
-def gen_includes(ast, to_file):
+def gen_includes(ast, to_file, namespace):
     includes = str()
     if ast['includes'] and to_file:
         includes += '\n'
@@ -14,7 +14,7 @@ def gen_includes(ast, to_file):
 
     return includes
 
-def gen_defines(ast, to_file):
+def gen_defines(ast, to_file, namespace):
     defines = str()
     if ast['defines'] and to_file:
         defines += '\n'
@@ -23,7 +23,7 @@ def gen_defines(ast, to_file):
 
     return defines
 
-def gen_structs(ast):
+def gen_structs(ast, namespace):
     structs = list();
     if ast['structs']:
         for struct in ast['structs']:
@@ -36,7 +36,7 @@ def gen_structs(ast):
 
     return structs;
 
-def gen_typedefs(ast):
+def gen_typedefs(ast, namespace):
     typedefs = list();
     if ast['typedefs']:
         typedefs.append('// typedefs')
@@ -46,14 +46,14 @@ def gen_typedefs(ast):
     return typedefs
 
 
-def gen_funcs(ast):
+def gen_funcs(ast, namespace):
     funcs = list()
     if ast['funcs']:
         funcs.append('\n'.join([
             '// function prototypes',
-            'ssize_t func_resp_sz(uint8_t code);',
-            'int func_parse_exec(uint8_t * cmd, ssize_t);',
-            'int resp_parse_exec(uint8_t * const resp, ssize_t);'
+            'ssize_t '+namespace+'func_resp_sz(uint8_t code);',
+            'int '+namespace+'func_parse_exec(uint8_t * cmd, ssize_t);',
+            'int '+namespace+'resp_parse_exec(uint8_t * const resp, ssize_t);'
             ]))
         for code, fun in enumerate(ast['funcs']):
             rett = fun['return_t']
@@ -61,27 +61,27 @@ def gen_funcs(ast):
             a = arg_list(fun, True)
             funcs.append('\n'.join([
                 '// function {f}'.format(f = name),
-                'uint8_t const func_{f}_code = {c};'.format(f = name, c = code + 1),
-                'ssize_t const func_{f}_sz = {sz};'.format(f = name, sz = fun_size(ast, fun)),
-                'ssize_t const resp_{f}_sz = {sz};'.format(f = name, sz = fun_ret_size(ast, fun)),
-                'typedef int (* func_{n}_handler_t)({args});'.format(n = name, args = arg_list(fun, False)),
-                'typedef int (* resp_{n}_handler_t)({r});'.format(r = rett if rett != 'void' else '', n = name),
-                'int func_{f}_register(func_{f}_handler_t);'.format(f = name),
-                'int resp_{f}_register(resp_{f}_handler_t);'.format(f = name),
-                'int func_{f}_marshal(uint8_t *, ssize_t sz{args});'.format(f = name, args = ', ' + a if a else ''),
-                'int resp_{f}_marshal(uint8_t *, ssize_t sz{args});'.format(f = name, args = ', ' + rett if rett != 'void' else ''),
+                'uint8_t const {ns}func_{f}_code = {c};'.format(ns = namespace, f = name, c = code + 1),
+                'ssize_t const {ns}func_{f}_sz = {sz};'.format(ns = namespace, f = name, sz = fun_size(ast, fun)),
+                'ssize_t const {ns}resp_{f}_sz = {sz};'.format(ns = namespace, f = name, sz = fun_ret_size(ast, fun)),
+                'typedef int (* {ns}func_{n}_handler_t)({args});'.format(ns = namespace, n = name, args = arg_list(fun, False)),
+                'typedef int (* {ns}resp_{n}_handler_t)({r});'.format(ns = namespace, r = rett if rett != 'void' else '', n = name),
+                'int {ns}func_{f}_register(func_{f}_handler_t);'.format(ns = namespace, f = name),
+                'int {ns}resp_{f}_register(resp_{f}_handler_t);'.format(ns = namespace, f = name),
+                'int {ns}func_{f}_marshal(uint8_t *, ssize_t sz{args});'.format(ns = namespace, f = name, args = ', ' + a if a else ''),
+                'int {ns}resp_{f}_marshal(uint8_t *, ssize_t sz{args});'.format(ns = namespace, f = name, args = ', ' + rett if rett != 'void' else ''),
                 ]))
     return funcs;
 
 
 
-def generate(ast, to_file):
-    includes = gen_includes(ast, to_file);
-    defines = gen_defines(ast, to_file);
+def generate(ast, to_file, namespace):
+    includes = gen_includes(ast, to_file, namespace);
+    defines = gen_defines(ast, to_file, namespace);
     types = list();
-    structs = gen_structs(ast);
-    typedefs = gen_typedefs(ast);
-    funcs = gen_funcs(ast);
+    structs = gen_structs(ast, namespace);
+    typedefs = gen_typedefs(ast, namespace);
+    funcs = gen_funcs(ast, namespace);
 
 
     code = includes + defines;
@@ -94,5 +94,5 @@ def generate(ast, to_file):
 
 if __name__ == '__main__':
     ast = ast.make_ast(scanner.scan(sys.stdin));
-    print(generate(ast), end='');
+    print(generate(ast, true, ''), end='');
     sys.exit(0);
