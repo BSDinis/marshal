@@ -172,7 +172,7 @@ def make_ast(stmts):
                 ast['types'].add(m[0])
 
     for f in ast['funcs']:
-        if f['return_t'] != 'void' and not any(t[0] == s['typedef'] for s in ast['structs']):
+        if f['return_t'] != 'void' and not any(f['return_t'] == s['typedef'] for s in ast['structs']):
             ast['types'].add(f['return_t'])
 
         for t in f['args']:
