@@ -28,8 +28,6 @@ def options():
 
     parser = argparse.ArgumentParser(description='Marshal Compiler')
     parser.add_argument('code', nargs='*', help='marshal src files .m')
-    parser.add_argument('-H', nargs='?', default=False, help='generate C header code; optionally generates a specific .h file')
-    parser.add_argument('-c', nargs='?', default=False, help='generate C source code; optionally generates a specific .c file')
     parser.add_argument('-H', metavar='header.h', nargs='?', default=False, help='generate C header code; optionally generates a specific .h file')
     parser.add_argument('-c', metavar='source.c', nargs='?', default=False, help='generate C source code; optionally generates a specific .c file')
     parser.add_argument('-p', action='store_true', help='generate function prototypes for the C file')
