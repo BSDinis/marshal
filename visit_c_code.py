@@ -11,18 +11,18 @@ def gen_types(ast):
         code = str()
         variable = str()
         code  = \
-    '''static int marshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const val)
-    {{
-      if (ptr == NULL) return 1;
-      if (rem && *rem < sizeof({t})) return -1;
+'''static int marshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const val)
+{{
+  if (ptr == NULL) return 1;
+  if (rem && *rem < sizeof({t})) return -1;
 
-      memcpy(*ptr, &val, sizeof({t}));
+  memcpy(*ptr, &val, sizeof({t}));
 
-      *ptr += sizeof({t});
-      if (rem) *rem -= sizeof({t});
+  *ptr += sizeof({t});
+  if (rem) *rem -= sizeof({t});
 
-      return 0;
-    }}'''
+  return 0;
+}}'''
         return code.format(t_ = typename_u, t = typename)
 
     def gen_type_unmarshal(typename):
@@ -30,18 +30,18 @@ def gen_types(ast):
         code = str()
         variable = str()
         code  = \
-    '''static int unmarshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * const val)
-    {{
-      if (ptr == NULL) return 1;
-      if (rem && *rem < sizeof({t})) return -1;
+'''static int unmarshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * const val)
+{{
+  if (ptr == NULL) return 1;
+  if (rem && *rem < sizeof({t})) return -1;
 
-      memcpy(val, *ptr, sizeof({t}));
+  memcpy(val, *ptr, sizeof({t}));
 
-      *ptr += sizeof({t});
-      if (rem) *rem -= sizeof({t});
+  *ptr += sizeof({t});
+  if (rem) *rem -= sizeof({t});
 
-      return 0;
-    }}'''
+  return 0;
+}}'''
         return code.format(t_ = typename_u, t = typename)
 
 
@@ -64,16 +64,16 @@ def gen_structs(ast):
         code = str()
         variable = str()
         code = \
-    '''static int marshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const * val)
-    {{
-      if (ptr == NULL) return 1;
+'''static int marshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const * val)
+{{
+  if (ptr == NULL) return 1;
 
-      {szdecl};
-      if (rem && *rem < sz) return -1;
-      int ret = 0;
+  {szdecl};
+  if (rem && *rem < sz) return -1;
+  int ret = 0;
 
 
-    '''
+'''
         for m in s['members']:
             if any(struct['typedef'] == m[0] for struct in ast['structs']):
                 code += '  ret = marshall_{t}(ptr, rem, &(val->{data_m}));\n'.format(t = m[0], data_m = m[1]);
@@ -82,11 +82,11 @@ def gen_structs(ast):
             code += '  if (ret) return ret; // error\n\n'
 
         code += \
-    '''
-      *ptr += sz;
-      if (rem) *rem -= sz;
-      return 0;
-    }}'''
+'''
+  *ptr += sz;
+  if (rem) *rem -= sz;
+  return 0;
+}}'''
         return code.format(t_ = typename_u, t = typename, szdecl = sz_decl)
 
 
@@ -97,26 +97,26 @@ def gen_structs(ast):
         code = str()
         variable = str()
         code = \
-    '''static int unmarshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * val)
-    {{
-      if (ptr == NULL) return 1;
+'''static int unmarshall_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * val)
+{{
+  if (ptr == NULL) return 1;
 
-      {szdecl};
-      if (rem && *rem < sz) return -1;
-      int ret = 0;
+  {szdecl};
+  if (rem && *rem < sz) return -1;
+  int ret = 0;
 
 
-    '''
+'''
         for m in s['members']:
             code += '  ret = unmarshall_{t}(ptr, rem, &(val->{data_m}));\n'.format(t = m[0], data_m = m[1]);
             code += '  if (ret) return ret; // error\n\n'
 
         code += \
-    '''
-      *ptr += sz;
-      if (rem) *rem -= sz;
-      return 0;
-    }}'''
+'''
+  *ptr += sz;
+  if (rem) *rem -= sz;
+  return 0;
+}}'''
         return code.format(t_ = typename_u, t = typename, szdecl = sz_decl)
 
     structs = list();
@@ -133,6 +133,23 @@ def gen_funcs(ast):
     def gen_func(f):
         name = f['name'];
         args = f['args'];
+        def resp_parse_exec(f):
+            code = \
+'''
+static int resp_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
+{{
+  if (!cmd || !resp_{f}_handler_t || sz < 1) return -1;
+
+  uint8_t * ptr = cmd + 1;
+  sz -= 1;
+
+  {typ} ret;
+  if (unmarshall_{typ_}(&ptr, &sz, ret) != 0) return -1;
+
+  return resp_f_handler(ret);
+}}'''
+            return code.format(f = name, typ = f['return_t'], typ_ = f['return_t'].replace(' ', '_'))
+
         def func_parse_exec(f):
             code = \
 '''
@@ -155,7 +172,8 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
   return func_f_handler({a});
 }}'''
             return code.format(f = name, a = ', '.join([arg[1] for arg in args]))
-        return func_parse_exec(f)
+
+        return resp_parse_exec(f)
 
 
 
@@ -163,7 +181,7 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
     if ast['funcs']:
         for func in ast['funcs']:
             funcs.append('\n'.join([
-                '// function {f}'.format(f = func['name']),
+                '\n\n// function {f}'.format(f = func['name']),
                 gen_func(func)
                 ]))
 
