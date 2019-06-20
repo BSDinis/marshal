@@ -1,12 +1,9 @@
 """ Marshal C source file visitor """
 
 import sys
-import scanner
-import ast
-from ast import struct_size;
-from ast import fun_size;
-from ast import arg_list;
-
+import lex.scanner
+import syntax.ast
+from visit.helpers import *;
 
 def gen_types(ast):
     def gen_type_marshal(typename):

@@ -1,14 +1,14 @@
-#!/usr/bin/env python3
 """ Marshal Compiler """
 
 import sys
-import scanner
-import ast
-import visit_c_prot
-import visit_c_header
-import visit_c_code
 import argparse
 import os
+
+import lex.scanner as scanner
+import syntax.ast as ast
+import visit.visit_c_prot as visit_c_prot
+import visit.visit_c_header as visit_c_header
+import visit.visit_c_code as visit_c_code
 
 def options():
     def get_ext_out(arg, files, has_input, print_all, prot, ext):
@@ -62,14 +62,14 @@ def main():
         astree = ast.make_ast(scanner.scan(cin));
         if header:
             if header.name != '<stdout>':
-                print(f'/**\n * {header.name}\n */\n', file=header)
+                print(f'/**\n * {header.name}\n */'+'\n', file=header)
                 print('#pragma once\n', file=header)
 
             print('/***\n * headers\n */', file = header)
             print(visit_c_header.generate(astree, header.name != '<stdout>'), file=header);
         if code:
             if header and header.name != '<stdout>':
-                print(f'/**\n * {code.name}\n */\n', file=code)
+                print(f'/**\n * {code.name}\n */'+'\n', file=code)
                 print(f'#include "{header.name}"', file = code)
                 print('#include <string.h>', file = code)
                 print('\n', file = code)
