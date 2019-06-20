@@ -24,8 +24,10 @@ def gen_struct(s):
 def gen_func(f):
     return '\n'.join([
         '// function {n}'.format(n = f['name']),
-        'static int func_{n}_parse_exec(uint8_t *cmd , ssize_t, uint8_t *resp, ssize_t)'.format(n = f['name']),
-        'static int resp_{n}_parse_exec(uint8_t *resp, ssize_t)'.format(n = f['name'])
+        'static int func_{n}_parse_exec(uint8_t *cmd , ssize_t)'.format(n = f['name']),
+        'static int resp_{n}_parse_exec(uint8_t *resp, ssize_t)'.format(n = f['name']),
+        'static func_{n}_handler_t func_{n}_handler;'.format(n = f['name']),
+        'static resp_{n}_handler_t resp_{n}_handler;'.format(n = f['name']),
         ])
 
 def generate(ast):
