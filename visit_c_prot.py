@@ -1,12 +1,9 @@
-#!/usr/bin/env python3
 """ Marshal C prototype visitor """
 
 import sys
 import scanner
 import ast
-
-def gen_func(f):
-    return ['']
+from ast import arg_list
 
 def gen_typename(typename, ref):
     typename_u = typename.replace(' ', '_')
@@ -24,6 +21,14 @@ def gen_type(t):
 def gen_struct(s):
     return gen_typename(s['typedef'], True)
 
+def gen_func(f):
+    return '\n'.join([
+        '// function {n}'.format(n = f['name']),
+        'static int func_{n}_parse_exec(uint8_t *cmd , ssize_t);'.format(n = f['name']),
+        'static int resp_{n}_parse_exec(uint8_t *resp, ssize_t);'.format(n = f['name']),
+        'static func_{n}_handler_t func_{n}_handler = NULL;'.format(n = f['name']),
+        'static resp_{n}_handler_t resp_{n}_handler = NULL;'.format(n = f['name']),
+        ])
 
 def generate(ast):
     types = list();
@@ -40,7 +45,6 @@ def generate(ast):
             structs.append('// {t}\n'.format(t = struct['typedef']) + gen_struct(struct))
 
     if ast['funcs']:
-        typedefs.append('// function prototypes')
         for func in ast['funcs']:
             funcs.append(gen_func(func))
 

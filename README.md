@@ -66,8 +66,9 @@ inline ssize_t func_resp_sz(uint8_t code);
 int func_parse_exec(uint8_t * cmd, ssize_t, uint8_t *resp, ssize_t );
 int resp_parse_exec(uint8_t const * resp, ssize_t const);
 
-// here filename is the name of the .m file
-typedef T (func_f_t *)(X, Y);
+// generate nice function handlers
+typedef T (func_f_handler_t *)(X, Y);
+typedef int (resp_f__handler_t *)(T);
 
 ssize_t const func_f_sz = XXX;
 
@@ -82,5 +83,6 @@ int func_f_register(func_f_t);
 
 And the corresponding source code. In there, a function to specifically parse and exec function `f`:
 ```C
-int func_f_parse_exec(uint8_t * cmd, ssize_t, uint8_t *resp, ssize_t)
+static int func_f_parse_exec(uint8_t * cmd, ssize_t, uint8_t *resp, ssize_t)
+static int resp_f_parse_exec(uint8_t * resp, ssize_t)
 ```

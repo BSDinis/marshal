@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """ Marshal Lexer """
 
 import sys
@@ -76,6 +75,8 @@ def scan(cin):
     text = rem_comments(cin.read())
     text = preprocessor_add_semicolons(text).replace('\n', '')
     text = text.replace('#', ' # ');
+    text = text.replace(')', ' ) ');
+    text = text.replace('(', ' ( ');
     text = text.replace('}', ' } ');
     text = text.replace('{', ' { ');
     text = text.replace(',', ' , ');

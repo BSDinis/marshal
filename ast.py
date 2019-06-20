@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+""" Marshal ast generator """
 
 import sys
 import scanner
@@ -11,6 +11,40 @@ INCLUDE = 4
 DEFINE  = 5
 
 has_nested_list = lambda x : any(isinstance(i, list) for i in x);
+
+def struct_size(s):
+    return ' + '.join(['sizeof({t})'.format(t = m[0]) for m in s['members']])
+
+def fun_size(ast, f):
+    sizes = ['sizeof(uint8_t)']
+    for arg in f['args']:
+        if arg[0] in ast['types']:
+            sizes.append('sizeof('+arg[0]+')')
+        elif any(arg[0] == s['typedef'] for s in ast['structs']):
+            sizes.append(struct_size(next(s for s in ast['structs'] if arg[0] == s['typedef'])))
+        else:
+            ast['types'].add(arg[0])
+            sizes.append('sizeof('+arg[0]+')')
+
+    return ' + '.join(sizes);
+
+def fun_ret_size(ast, f):
+    sizes = ['sizeof(uint8_t)']
+    if f['return_t'] in ast['types']:
+        sizes.append('sizeof('+f['return_t']+')')
+    elif any(f['return_t'] == s['typedef'] for s in ast['structs']):
+        sizes.append(struct_size(next(s for s in ast['structs'] if f['return_t'] == s['typedef'])))
+    else:
+        ast['types'].add(f['return_t'])
+        sizes.append('sizeof('+f['return_t']+')')
+
+    return ' + '.join(sizes);
+
+def arg_list(f, full):
+    if full:
+        return ', '.join(' '.join(arg) for arg in f['args'])
+    else:
+        return ', '.join(arg[0] for arg in f['args'])
 
 def make_type(ast, stmt):
     node = ' '.join(stmt)
@@ -62,6 +96,40 @@ def make_struct(ast, stmt):
     struct['members'] = members;
     return STRUCT, struct;
 
+def make_func(ast, stmt):
+    f = {
+            'name': str(),
+            'return_t': str(),
+            'args': list(),
+        }
+
+    for idx, s in enumerate(stmt):
+        if s == '(':
+            break
+    else:
+        raise SyntaxError('no parens in function ' + str(stmt))
+
+    f['return_t'] = ' '.join(stmt[:idx - 1]);
+    f['name'] = stmt[idx - 1];
+
+    arg = []
+    for i, s in enumerate(stmt[idx + 1:]):
+        if s == ')':
+            if arg:
+                f['args'].append((' '.join(arg[:-1]), arg[-1]))
+            break
+        elif s == ',':
+            f['args'].append((' '.join(arg[:-1]), arg[-1]))
+            arg = []
+        else:
+            arg += [s]
+    else:
+        raise SyntaxError('unmatched parens' + str(stmt))
+
+    return FUNC, f
+
+
+
 def make_preprocessor(ast, stmt):
     if stmt[1] == 'include':
         return INCLUDE, ''.join(stmt[2:]);
@@ -77,6 +145,8 @@ def make_node(ast, stmt):
         return make_preprocessor(ast, stmt)
     elif 'typedef' in stmt:
         return make_typedef(ast, stmt);
+    elif '(' in stmt:
+        return make_func(ast, stmt);
     else:
         return make_type(ast, stmt);
 
@@ -112,6 +182,20 @@ def make_ast(stmts):
                 pass
             elif m[0] not in ast['types']:
                 ast['types'].add(m[0])
+
+    for f in ast['funcs']:
+        if f['return_t'] != 'void' and not any(f['return_t'] == s['typedef'] for s in ast['structs']):
+            ast['types'].add(f['return_t'])
+
+        for t in f['args']:
+            if t[0] != 'void' and not any(t[0] == s['typedef'] for s in ast['structs']):
+                ast['types'].add(t[0])
+
+
+
+
+
+
     return ast;
 
 if __name__ == '__main__':
