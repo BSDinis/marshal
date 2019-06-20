@@ -1,2 +1,2 @@
-long long;
+double;
 struct point { int a; };
