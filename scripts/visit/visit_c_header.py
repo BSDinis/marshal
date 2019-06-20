@@ -51,7 +51,6 @@ def gen_funcs(ast):
     if ast['funcs']:
         funcs.append('\n'.join([
             '// function prototypes',
-            'ssize_t func_resp_sz(uint8_t code);',
             'int func_parse_exec(uint8_t * cmd, ssize_t);',
             'int resp_parse_exec(uint8_t * const resp, ssize_t);'
             ]))
