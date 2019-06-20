@@ -118,7 +118,7 @@ def make_node(ast, stmt):
 
 def make_ast(stmts):
     ast = {
-            'types': {'uint32_t'}
+            'types': {'uint32_t'},
             'structs': list(),
             'funcs': list(),
             'typedefs': list(),
