@@ -5,6 +5,7 @@ import scanner
 import ast
 from ast import struct_size;
 from ast import fun_size;
+from ast import arg_list;
 
 
 def gen_types(ast):
@@ -203,9 +204,10 @@ int func_parse_exec(uint8_t * cmd, ssize_t sz)
         return code
 
 
-    def gen_func(f):
+    def gen_func(f, fcode):
         name = f['name'];
         args = f['args'];
+        a = arg_list(f, True)
         def resp_f_parse_exec(f):
             code = \
 '''
@@ -246,17 +248,62 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
 }}'''
             return code.format(f = name, a = ', '.join([arg[1] for arg in args]))
 
-        return ''
+        def resp_f_register(f):
+            code = \
+'''
+int resp_{f}_register(resp_{f}_handler_t handler)
+{{
+  resp_{f}_handler = handler;
+  return 0;
+}}
+'''
+            return code.format(f = name)
+
+        def func_f_register(f):
+            code = \
+'''
+int func_{f}_register(func_{f}_handler_t handler)
+{{
+  func_{f}_handler = handler;
+  return 0;
+}}
+'''
+            return code.format(f = name)
+
+        def func_f_marshal(ast, f, fcode):
+            code = \
+'''
+int func_{f}_marshal(uint8_t * cmd, ssize_t sz{aargs})
+{{
+  if (!cmd || sz < 1) return -1;
+
+  cmd[0] = {cd};
+'''
+            for arg in args:
+                if arg[0] == 'void':
+                    pass
+                elif arg[0] in ast['types']:
+                    code += '  if (marshall_{typ_}(&ptr, &sz, {argname}) != 0)\n    return -1;\n'.format(typ_ = arg[0].replace(' ', '_'), argname = arg[1])
+                else:
+                    code += '  if (marshall_{typ_}(&ptr, &sz, &{argname}) != 0)\n    return -1;\n'.format(typ_ = arg[0].replace(' ', '_'), argname = arg[1])
+            code += \
+'''
+  return 0;
+}}
+'''
+            return code.format(f = name, cd = fcode, aargs = ', ' + a if a else '')
+
+        return func_f_marshal(ast, f, fcode)
 
 
 
 
     funcs = list()
     if ast['funcs']:
-        for func in ast['funcs']:
+        for code, func in enumerate(ast['funcs']):
             funcs.append('\n'.join([
                 '\n\n// function {f}'.format(f = func['name']),
-                resp_parse_exec(ast)
+                gen_func(func, code + 1)
                 ]))
 
     return funcs
