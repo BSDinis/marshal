@@ -334,7 +334,7 @@ int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz, uint32_t ticket{rarg})
   uint8_t * ptr = cmd + 1;
   sz -= 1;
 
-  if (marshal_uint32_t(&ptr, &sz, ticket) != 0) return -1
+  if (marshal_uint32_t(&ptr, &sz, ticket) != 0) return -1;
 
 '''
             if rett == 'void':
