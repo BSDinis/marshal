@@ -31,6 +31,7 @@ def options():
     parser.add_argument('-H', metavar='header.h', nargs='?', default=False, help='generate C header code; optionally generates a specific .h file')
     parser.add_argument('-c', metavar='source.c', nargs='?', default=False, help='generate C source code; optionally generates a specific .c file')
     parser.add_argument('-p', action='store_true', help='generate function prototypes for the C file')
+    parser.add_argument('-n', metavar='namespace', nargs=1, default=None, help='give namespace name')
 
     args = parser.parse_args()
     in_files = [open(c, "r") for c in args.code]
@@ -50,15 +51,18 @@ def options():
     elif args.c != False:
         what_to_print = 1;
 
+    if args.n == None and args.code:
+        namespaces = [f.split('/')[-1].split('.')[0] for f in args.code]
 
+    if namespaces[0]:
+        namespaces = [n + '_' for n in namespaces];
 
-
-    return in_files, headers, codes, what_to_print
+    return in_files, headers, codes, what_to_print, namespaces
 
 def main():
     """ main compiler routine """
-    cins, headers, codes, what_to_print = options();
-    for cin, header, code in zip(cins, headers, codes):
+    cins, headers, codes, what_to_print, namespaces = options();
+    for cin, header, code, namespace in zip(cins, headers, codes, namespace):
         astree = ast.make_ast(scanner.scan(cin));
         if header:
             if header.name != '<stdout>':
@@ -66,7 +70,7 @@ def main():
                 print('#pragma once\n', file=header)
 
             print('/***\n * headers\n */', file = header)
-            print(visit_c_header.generate(astree, header.name != '<stdout>'), file=header);
+            print(visit_c_header.generate(astree, header.name != '<stdout>', namespace), file=header);
         if code:
             if header and header.name != '<stdout>':
                 print(f'/**\n * {code.name}\n */'+'\n', file=code)
@@ -75,10 +79,10 @@ def main():
                 print('\n', file = code)
             if what_to_print in [2, 3]:
                 print('/***\n * protoyped declarations\n */', file = code)
-                print(visit_c_prot.generate(astree), file = code);
+                print(visit_c_prot.generate(astree, namespace), file = code);
             if what_to_print in [1, 3]:
                 print('/***\n * code\n */', file = code)
-                print(visit_c_code.generate(astree), file = code);
+                print(visit_c_code.generate(astree, namespace), file = code);
 
     return 0
 
