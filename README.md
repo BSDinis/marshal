@@ -9,6 +9,16 @@ One time-honored solution is using some form of RPC. However, there are a few is
   2. RPC's abstraction means a certain port is used, the connection is established for you. You may not want this. You could prefer to send the commands yourself. You may want a non-blocking connection, to establish a TLS channel.
   3. Last, and least, RPC is old. You know it is from another era when it optionally compiles for **K&R C**.
 
+## Installation
+
+### Requirements
+
+`>=python3.7`
+`pyinstaller`
+
+To build, run `make build`; then place the resulting binary in your `PATH`.
+
+
 ## Aim
 To make a compiler for a C-like DSL that allows the definition of structs and functions and generates the corresponding C code for marshaling and unmarshaling.
 
