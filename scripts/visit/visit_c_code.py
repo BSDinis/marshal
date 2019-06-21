@@ -214,6 +214,8 @@ int {ns}_resp_parse_exec(uint8_t * const resp, ssize_t sz)
 {{
   if (!resp || sz < 1) return -1;
   memset(resp, 0, sz);
+  int32_t ticket = -1;
+  uint8_t * ptr = resp;
   switch (resp[0]) {{
 '''
 
@@ -221,7 +223,8 @@ int {ns}_resp_parse_exec(uint8_t * const resp, ssize_t sz)
             code += '    case {c}:\n      return resp_{f}_parse_exec(resp, sz);\n'.format(c = fcode + 1, f = fun['name'])
         code += \
 '''    default:
-      return -1;
+      if (unmarshal_int32_t(&ptr, &sz, &ticket) == -1) return -1;
+      return ticket;
   }}
   return 0;
 }}
@@ -234,6 +237,8 @@ int {ns}func_parse_exec(uint8_t * cmd, ssize_t sz)
 {{
   if (!cmd || sz < 1) return -1;
   memset(cmd, 0, sz);
+  int32_t ticket = -1;
+  uint8_t * ptr = cmd;
   switch (cmd[0]) {{
 '''
 
@@ -241,7 +246,8 @@ int {ns}func_parse_exec(uint8_t * cmd, ssize_t sz)
             code += '    case {c}:\n      return func_{f}_parse_exec(cmd, sz);\n'.format(c = fcode + 1, f = fun['name'])
         code += \
 '''    default:
-      return -1;
+      if (unmarshal_int32_t(&ptr, &sz, &ticket) == -1) return -1;
+      return ticket;
   }}
   return 0;
 }}
@@ -264,8 +270,8 @@ static int resp_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
   uint8_t * ptr = cmd + 1;
   sz -= 1;
 
-  uint32_t __ticket = 0;
-  if (unmarshal_uint32_t(&ptr, &sz, &__ticket)) return -1;
+  int32_t __ticket = 0;
+  if (unmarshal_int32_t(&ptr, &sz, &__ticket)) return -1;
 
   {typ} ret;
   if (unmarshal_{typ_}(&ptr, &sz, &ret) != 0) return -1;
@@ -285,8 +291,8 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
   uint8_t * ptr = cmd + 1;
   sz -= 1;
 
-  uint32_t __ticket = 0;
-  if (unmarshal_uint32_t(&ptr, &sz, &__ticket)) return -1;
+  int32_t __ticket = 0;
+  if (unmarshal_int32_t(&ptr, &sz, &__ticket)) return -1;
 '''
             for arg in args:
                 code += \
@@ -327,7 +333,7 @@ int {ns}func_{f}_register({ns}func_{f}_handler_t handler)
         def resp_f_marshal(f, fcode):
             code = \
 '''
-int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz, uint32_t ticket{rarg})
+int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz, int32_t ticket{rarg})
 {{
   if (!cmd || sz < 1) return -1;
 
@@ -336,7 +342,7 @@ int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz, uint32_t ticket{rarg})
   uint8_t * ptr = cmd + 1;
   sz -= 1;
 
-  if (marshal_uint32_t(&ptr, &sz, ticket) != 0) return -1;
+  if (marshal_int32_t(&ptr, &sz, ticket) != 0) return -1;
 
 '''
             if rett == 'void':
@@ -355,7 +361,7 @@ int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz, uint32_t ticket{rarg})
         def func_f_marshal(f, fcode):
             code = \
 '''
-int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz, uint32_t ticket{aargs})
+int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz, int32_t ticket{aargs})
 {{
   if (!cmd || sz < 1) return -1;
 
@@ -364,7 +370,7 @@ int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz, uint32_t ticket{aargs})
   uint8_t * ptr = cmd + 1;
   sz -= 1;
 
-  if (marshal_uint32_t(&ptr, &sz, ticket) != 0) return -1;
+  if (marshal_int32_t(&ptr, &sz, ticket) != 0) return -1;
 
 '''
             for arg in args:

@@ -64,12 +64,12 @@ def gen_funcs(ast, namespace):
                 'uint8_t const {ns}func_{f}_code = {c};'.format(ns = namespace, f = name, c = code + 1),
                 'ssize_t const {ns}func_{f}_sz = {sz};'.format(ns = namespace, f = name, sz = fun_size(ast, fun)),
                 'ssize_t const {ns}resp_{f}_sz = {sz};'.format(ns = namespace, f = name, sz = fun_ret_size(ast, fun)),
-                'typedef int (* {ns}func_{n}_handler_t)(uint32_t ticket{args});'.format(ns = namespace, n = name, args = ', ' + a if a else ''),
-                'typedef int (* {ns}resp_{n}_handler_t)(uint32_t ticket{r});'.format(ns = namespace, r = ', ' + rett if rett != 'void' else '', n = name),
+                'typedef int (* {ns}func_{n}_handler_t)(int32_t ticket{args});'.format(ns = namespace, n = name, args = ', ' + a if a else ''),
+                'typedef int (* {ns}resp_{n}_handler_t)(int32_t ticket{r});'.format(ns = namespace, r = ', ' + rett if rett != 'void' else '', n = name),
                 'int {ns}func_{f}_register({ns}func_{f}_handler_t);'.format(ns = namespace, f = name),
                 'int {ns}resp_{f}_register({ns}resp_{f}_handler_t);'.format(ns = namespace, f = name),
-                'int {ns}func_{f}_marshal(uint8_t *, ssize_t sz, uint32_t ticket{args});'.format(ns = namespace, f = name, args = ', ' + a if a else ''),
-                'int {ns}resp_{f}_marshal(uint8_t *, ssize_t sz, uint32_t ticket{args});'.format(ns = namespace, f = name, args = ', ' + rett if rett != 'void' else ''),
+                'int {ns}func_{f}_marshal(uint8_t *, ssize_t sz, int32_t ticket{args});'.format(ns = namespace, f = name, args = ', ' + a if a else ''),
+                'int {ns}resp_{f}_marshal(uint8_t *, ssize_t sz, int32_t ticket{args});'.format(ns = namespace, f = name, args = ', ' + rett if rett != 'void' else ''),
                 ]))
     return funcs;
 
