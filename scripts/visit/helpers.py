@@ -1,6 +1,7 @@
 """ Type helping """
 
 from syntax.ast import add_type
+from utils.typehelpers import real_types
 
 def linearize_type(t):
     return t.replace(' ', '_').replace('[', '_').replace(']', '')
@@ -36,15 +37,17 @@ def struct_size(s):
     return ' + '.join(['sizeof({t})'.format(t = m[0]) for m in s['members']])
 
 def fun_size(ast, f):
+    def real_t(t, real): return real[t] if t in real else t;
     sizes = ['sizeof(uint8_t)']
+    real = real_types(ast)
     for arg in f['args']:
         if arg[0] in ast['types']:
-            sizes.append('sizeof('+arg[0]+')')
+            sizes.append('sizeof('+real_t(arg[0], real)+')')
         elif any(arg[0] == s['typedef'] for s in ast['structs']):
             sizes.append(struct_size(next(s for s in ast['structs'] if arg[0] == s['typedef'])))
         else:
             add_type(ast, arg[0])
-            sizes.append('sizeof('+arg[0]+')')
+            sizes.append('sizeof('+real_t(arg[0], real)+')')
 
     return ' + '.join(sizes);
 
