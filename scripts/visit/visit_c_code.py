@@ -248,7 +248,6 @@ int {ns}resp_parse_exec(uint8_t * const resp, ssize_t sz)
 int {ns}func_parse_exec(uint8_t * cmd, ssize_t sz)
 {{
   if (!cmd || sz < 1) return -1;
-  memset(cmd, 0, sz);
   int32_t ticket = -1;
   uint8_t * ptr = cmd;
   switch (cmd[0]) {{
