@@ -30,7 +30,7 @@ def network_convert(ast, typ, to_network, name):
                 return '  {l} = htons({n});\n'.format(n = name, l = lval)
             else:
                 return '  {l} = ntohs({n});\n'.format(n = name, l = lval)
-    return '';
+    return None;
 
 
 

@@ -58,10 +58,14 @@ def gen_types(ast, namespace):
   if (rem && *rem < sizeof({t})) return -1;
 
 '''
-        code  += network_convert(ast, typename, True, 'val')
+        nconv = network_convert(ast, typename, True, 'val')
+        if nconv:
+            code += nconv
+            code += '  memcpy(*ptr, &tmp, sizeof({t}));\n'
+        else:
+            code += '  memcpy(*ptr, &val, sizeof({t}));\n'
         code  += \
-'''  memcpy(*ptr, &val, sizeof({t}));
-
+'''
   *ptr += sizeof({t});
   if (rem) *rem -= sizeof({t});
 
@@ -79,7 +83,9 @@ def gen_types(ast, namespace):
 
   memcpy(val, *ptr, sizeof({t}));
 '''
-        code  += network_convert(ast, typename, False, '*val')
+        nconv = network_convert(ast, typename, False, '*val')
+        if nconv:
+            code += nconv
         code  += \
 '''
   *ptr += sizeof({t});

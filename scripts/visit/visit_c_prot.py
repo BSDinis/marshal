@@ -9,7 +9,7 @@ def gen_typename(typename, ref):
     typename_u = typename.replace(' ', '_')
     code = str()
     variable = str()
-    if ref: variable = 'const {t} *'.format(t = typename);
+    if ref: variable = '{t} *'.format(t = typename);
     else:   variable = '{t}'.format(t = typename);
     code  = 'static int marshal_{t_}(uint8_t ** ptr, ssize_t * rem, const {v});\n'.format(t_ = linearize_type(typename), v=variable)
     if '[' in typename:
