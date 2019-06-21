@@ -61,7 +61,7 @@ def gen_types(ast, namespace, mappings):
 '''
         nconv = network_convert(ast, real_typ, True, 'val')
         if nconv:
-            code += nconv
+            code += nconv.replace('{', '{{').replace('}', '}}')
             code += '  memcpy(*ptr, &tmp, sizeof({t}));\n'
         else:
             code += '  memcpy(*ptr, &val, sizeof({t}));\n'
@@ -86,7 +86,7 @@ def gen_types(ast, namespace, mappings):
 '''
         nconv = network_convert(ast, real_typ, False, '*val')
         if nconv:
-            code += nconv
+            code += nconv.replace('{', '{{').replace('}', '}}')
         code  += \
 '''
   *ptr += sizeof({t});

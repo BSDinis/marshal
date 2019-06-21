@@ -20,7 +20,27 @@ def network_convert(ast, typ, to_network, name):
 
     if 'int' in real_typ or 'long' in real_typ or 'short' in real_typ:
         if '64' in real_typ or 'long long' in real_typ:
-            raise SyntaxError('Cannot convert 64 bit type {t} {qual} ordering'.format(t = real_typ, qual = 'network' if to_network else 'host'))
+            if to_network:
+                code = \
+'''  uint64_t __tmp = {n};
+  if (htonl(1) != 1) {{
+    uint64_t __high = htonl({n} & ((((uint64_t)1) << 32) - 1));
+    uint64_t __low  = htonl({n} >> 32);
+    __tmp = (__high << 32) + __low;
+  }}
+  {l} = __tmp;'''
+                return code.format(n = name, l = lval).replace('{', '{{').replace('}', '}}')
+            else:
+                code =  \
+'''  uint64_t __tmp = {n};
+  if (ntohl(1) != 1) {{
+    uint64_t __high = ntohl({n} & ((((uint64_t)1) << 32) - 1));
+    uint64_t __low  = ntohl({n} >> 32);
+    __tmp = (__high << 32) + __low;
+  }}
+  {l} = __tmp;'''
+
+                return code.format(n = name, l = lval).replace('{', '{{').replace('}', '}}')
         elif '32' in real_typ or real_typ == 'int':
             if to_network:
                 return '  {l} = htonl({n});\n'.format(n = name, l = lval)
