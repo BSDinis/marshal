@@ -5,7 +5,7 @@ import lex.scanner
 import syntax.ast
 from visit.helpers import *;
 
-def gen_types(ast, namespace):
+def gen_types(ast, namespace, mappings):
     def find_last(s, ch): return [p for p, c in enumerate(s) if c == ch][-1];
     def gen_array_marshal(typename):
         size = typename.split('[')[1].split(']')[0]
@@ -415,7 +415,7 @@ int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz, int32_t ticket{aargs})
     return funcs
 
 def generate(ast, namespace):
-    types = gen_types(ast, namespace);
+    types = gen_types(ast, namespace, real_types(ast));
     structs = gen_structs(ast);
     funcs = gen_funcs(ast, namespace);
 
