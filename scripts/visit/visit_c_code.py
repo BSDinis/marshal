@@ -225,7 +225,6 @@ ssize_t {ns}func_resp_sz(uint8_t code)
 int {ns}resp_parse_exec(uint8_t * const resp, ssize_t sz)
 {{
   if (!resp || sz < 1) return -1;
-  memset(resp, 0, sz);
   int32_t ticket = -1;
   uint8_t * ptr = resp;
   switch (resp[0]) {{
