@@ -6,7 +6,7 @@ test:
 	for f in $$(ls *.m); \
 	do echo "running $$f"; \
 	python3 ../scripts/marshal.py $$f; \
-	gcc -c $${f%.m}.c -o $${f%.m}.o; \
+	clang -Wall -Werror -pedantic -Wno-unused-function -fdiagnostics-color=always -c $${f%.m}.c -o $${f%.m}.o; \
 	done; \
 	cd ..
 
