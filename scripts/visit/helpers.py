@@ -38,7 +38,7 @@ def struct_size(s):
 
 def fun_size(ast, f):
     def real_t(t, real): return real[t] if t in real else t;
-    sizes = ['sizeof(uint8_t)']
+    sizes = ['sizeof(uint8_t)', 'sizeof(int32_t)']
     real = real_types(ast)
     for arg in f['args']:
         if arg[0] in ast['types']:
@@ -52,7 +52,7 @@ def fun_size(ast, f):
     return ' + '.join(sizes);
 
 def fun_ret_size(ast, f):
-    sizes = ['sizeof(uint8_t)']
+    sizes = ['sizeof(uint8_t)', 'sizeof(int32_t)']
     if f['return_t'] in ast['types']:
         sizes.append('sizeof('+f['return_t']+')')
     elif any(f['return_t'] == s['typedef'] for s in ast['structs']):
