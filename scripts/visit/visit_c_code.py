@@ -217,7 +217,7 @@ ssize_t {ns}func_resp_sz(uint8_t code)
     def resp_parse_exec(ast):
         code = \
 '''
-int {ns}_resp_parse_exec(uint8_t * const resp, ssize_t sz)
+int {ns}resp_parse_exec(uint8_t * const resp, ssize_t sz)
 {{
   if (!resp || sz < 1) return -1;
   memset(resp, 0, sz);
