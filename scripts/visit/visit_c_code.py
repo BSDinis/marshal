@@ -10,7 +10,7 @@ def gen_types(ast, namespace, mappings):
     def find_last(s, ch): return [p for p, c in enumerate(s) if c == ch][-1];
     def gen_array_marshal(typename, real_typ):
         size = real_typ.split('[')[1].split(']')[0]
-        prev_type = real_typ[:find_last(typename, '[')]
+        prev_type = real_typ[:find_last(real_typ, '[')]
         code  = \
 '''static int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {param})
 {{
@@ -416,11 +416,9 @@ int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz, int32_t ticket{aargs})
     return funcs
 
 def generate(ast, namespace):
-    print(ast)
     types = gen_types(ast, namespace, real_types(ast));
     structs = gen_structs(ast);
     funcs = gen_funcs(ast, namespace);
-
 
     code = str()
     for frag in [types, structs, funcs]:
