@@ -2,10 +2,13 @@ BIN_DEST := ~/bin
 
 .PHONY: test
 test:
-	@for f in $$(ls test/*.m); \
+	@cd test; \
+	for f in $$(ls *.m); \
 	do echo "running $$f"; \
-	python3 scripts/marshal.py $$f; \
-	done;
+	python3 ../scripts/marshal.py $$f; \
+	gcc -c $${f%.m}.c -o $${f%.m}.o; \
+	done; \
+	cd ..
 
 .PHONY: build
 build: marshal
