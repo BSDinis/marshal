@@ -148,6 +148,7 @@ def gen_structs(ast):
 
 
     def gen_struct_unmarshal(ast, s):
+        mappings = real_types(ast);
         typename = s['typedef']
         typename_u = typename.replace(' ', '_')
         sz_decl = 'const ssize_t sz = ' + ' + '.join(['sizeof(' + m[0] + ')'  for m in s['members']])
@@ -163,7 +164,11 @@ def gen_structs(ast):
 
 '''
         for m in s['members']:
-            code += '  ret = unmarshal_{t}(ptr, rem, &(val->{data_m}));\n'.format(t = linearize_type(m[0]), data_m = m[1]);
+            real_typ = mappings[m[0]] if m[0] in mappings else m[0];
+            if '[' in real_typ:
+                code += '  ret = unmarshal_{t}(ptr, rem, val->{data_m});\n'.format(t = linearize_type(m[0]), data_m = m[1]);
+            else:
+                code += '  ret = unmarshal_{t}(ptr, rem, &(val->{data_m}));\n'.format(t = linearize_type(m[0]), data_m = m[1]);
             code += '  if (ret) return ret; // error\n\n'
 
         code += \
@@ -267,6 +272,7 @@ int {ns}func_parse_exec(uint8_t * cmd, ssize_t sz)
         args = f['args'];
         rett = f['return_t'];
         a = arg_list(f, True)
+        mappings = real_types(ast)
         def resp_f_parse_exec(f):
             code = \
 '''
@@ -281,8 +287,15 @@ static int resp_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
   if (unmarshal_int32_t(&ptr, &sz, &__ticket)) return -1;
 
   {typ} ret;
-  if (unmarshal_{typ_}(&ptr, &sz, &ret) != 0) return -1;
+'''
+            real_typ = mappings[f['return_t']] if f['return_t'] in mappings else f['return_t']
+            if '[' in real_typ:
+                code += '  if (unmarshal_{typ_}(&ptr, &sz, ret) != 0) return -1;\n'
+            else:
+                code += '  if (unmarshal_{typ_}(&ptr, &sz, &ret) != 0) return -1;\n'
 
+            code += \
+'''
   return resp_{f}_handler(__ticket, ret);
 }}
 '''
@@ -302,11 +315,12 @@ static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
   if (unmarshal_int32_t(&ptr, &sz, &__ticket)) return -1;
 '''
             for arg in args:
+                real_typ = mappings[arg[0]] if arg[0] in mappings else  arg[0]
                 code += \
 '''
   {typ_decl};
   if (unmarshal_{typ_}(&ptr, &sz, {argname}) != 0) return -1;
-'''.format(typ_decl = gen_type_decl([arg[0] , arg[1]]), typ_ = linearize_type(arg[0]), argname = '&'+arg[1] if '[' not in arg[0] else arg[1] )
+'''.format(typ_decl = gen_type_decl([arg[0] , arg[1]]), typ_ = linearize_type(arg[0]), argname = '&'+arg[1] if '[' not in real_typ else arg[1] )
 
             code += \
 '''
