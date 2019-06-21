@@ -2,6 +2,7 @@
 
 import sys
 import lex.scanner
+from utils.typehelpers import *
 
 TYPE    = 0
 STRUCT  = 1
@@ -15,16 +16,21 @@ has_nested_list = lambda x : any(isinstance(i, list) for i in x);
 def add_type(ast, t):
     def last_pos(string, char): return [pos for pos, c in enumerate(string) if char == c][-1]
     ast['types'].add(t)
-    if '[' in t:
-        add_type(ast, t[:last_pos(t, '[')])
+    real_type = real_types(ast)[t]
+    if '[' in real_type:
+        add_type(ast, real_type[:last_pos(real_type, '[')])
 
 def make_type(ast, stmt):
     node = ' '.join(stmt)
     return TYPE, node;
 
 def make_typedef(ast, stmt):
-    new_type = stmt[-1];
-    old_type = ' '.join(stmt[1:-1])
+    new_type = stmt[-1].split('[')[0];
+    if '[' in stmt[-1]:
+        arr_dim = stmt[-1][stmt[-1].find('['):]
+    else:
+        arr_dim = ''
+    old_type = ' '.join(stmt[1:-1])+arr_dim
     node = {'old': old_type, 'new': new_type}
     return TYPEDEF, node;
 
