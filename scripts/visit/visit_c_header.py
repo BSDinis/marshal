@@ -41,7 +41,11 @@ def gen_typedefs(ast, namespace):
     if ast['typedefs']:
         typedefs.append('// typedefs')
         for typedef in ast['typedefs']:
-            typedefs.append('typedef {o} {n};'.format(n = typedef['new'], o = typedef['old']))
+            dim = ''
+            if '[' in typedef['old']:
+                dim = typedef['old'][typedef['old'].find('['):]
+
+            typedefs.append('typedef {o} {n}{d};'.format(n = typedef['new'], o = typedef['old'].split('[')[0], d = dim))
 
     return typedefs
 

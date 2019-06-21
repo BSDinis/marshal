@@ -4,17 +4,18 @@ import sys
 import lex.scanner
 import syntax.ast
 from visit.helpers import *;
+from utils.typehelpers import *;
 
-def gen_types(ast, namespace):
+def gen_types(ast, namespace, mappings):
     def find_last(s, ch): return [p for p, c in enumerate(s) if c == ch][-1];
-    def gen_array_marshal(typename):
-        size = typename.split('[')[1].split(']')[0]
-        prev_type = typename[:find_last(typename, '[')]
+    def gen_array_marshal(typename, real_typ):
+        size = real_typ.split('[')[1].split(']')[0]
+        prev_type = real_typ[:find_last(real_typ, '[')]
         code  = \
 '''static int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {param})
 {{
   for (ssize_t i = 0; i < {sz}; i++) {{
-    int ret = marshal_{bt}(ptr, rem, val[i]);
+    int ret = marshal_{prev_t}(ptr, rem, val[i]);
     if (ret) return ret;
   }}
 
@@ -24,17 +25,17 @@ def gen_types(ast, namespace):
         return code.format(t_ = linearize_type(typename),
                 param = gen_type_decl([typename, 'const val']),
                 sz = size,
-                bt = linearize_type(prev_type)
+                prev_t = linearize_type(prev_type)
                 )
 
-    def gen_array_unmarshal(typename):
-        size = typename.split('[')[1].split(']')[0]
-        prev_type = typename[:find_last(typename, '[')]
+    def gen_array_unmarshal(typename, real_typ):
+        size = real_typ.split('[')[1].split(']')[0]
+        prev_type = real_typ[:find_last(real_typ, '[')]
         code  = \
 '''static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {param})
 {{
   for (ssize_t i = 0; i < {sz}; i++) {{
-    int ret = unmarshal_{bt}(ptr, rem, {possible}val[i]);
+    int ret = unmarshal_{prev_t}(ptr, rem, {possible}val[i]);
     if (ret) return ret;
   }}
 
@@ -44,13 +45,13 @@ def gen_types(ast, namespace):
         return code.format(t_ = linearize_type(typename),
                 param = gen_type_decl([typename, 'val']),
                 sz = size,
-                bt = linearize_type(prev_type),
+                prev_t = linearize_type(prev_type),
                 possible = '' if '[' in prev_type else '&'
                 )
 
 
 
-    def gen_type_marshal(typename):
+    def gen_type_marshal(typename, real_typ):
         code  = \
 '''static int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const val)
 {{
@@ -58,7 +59,7 @@ def gen_types(ast, namespace):
   if (rem && *rem < sizeof({t})) return -1;
 
 '''
-        nconv = network_convert(ast, typename, True, 'val')
+        nconv = network_convert(ast, real_typ, True, 'val')
         if nconv:
             code += nconv
             code += '  memcpy(*ptr, &tmp, sizeof({t}));\n'
@@ -73,7 +74,7 @@ def gen_types(ast, namespace):
 }}'''
         return code.format(t_ = linearize_type(typename), t = typename)
 
-    def gen_type_unmarshal(typename):
+    def gen_type_unmarshal(typename, real_typ):
         typename_u = typename.replace(' ', '_').replace('[', '_').replace(']', '')
         code  = \
 '''static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * const val)
@@ -83,7 +84,7 @@ def gen_types(ast, namespace):
 
   memcpy(val, *ptr, sizeof({t}));
 '''
-        nconv = network_convert(ast, typename, False, '*val')
+        nconv = network_convert(ast, real_typ, False, '*val')
         if nconv:
             code += nconv
         code  += \
@@ -99,17 +100,17 @@ def gen_types(ast, namespace):
     types = list();
     if ast['types']:
         for typ in ast['types']:
-            if '[' not in typ:
+            if '[' not in mappings[typ]:
                 types.append('\n'.join([
                     '// {t}'.format(t = typ),
-                    gen_type_marshal(typ),
-                    gen_type_unmarshal(typ)
+                    gen_type_marshal(typ, mappings[typ]),
+                    gen_type_unmarshal(typ, mappings[typ])
                     ]))
             else:
                 types.append('\n'.join([
                     '// {t}'.format(t = typ),
-                    gen_array_marshal(typ),
-                    gen_array_unmarshal(typ)
+                    gen_array_marshal(typ, mappings[typ]),
+                    gen_array_unmarshal(typ, mappings[typ])
                     ]))
 
     return types;
@@ -415,10 +416,9 @@ int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz, int32_t ticket{aargs})
     return funcs
 
 def generate(ast, namespace):
-    types = gen_types(ast, namespace);
+    types = gen_types(ast, namespace, real_types(ast));
     structs = gen_structs(ast);
     funcs = gen_funcs(ast, namespace);
-
 
     code = str()
     for frag in [types, structs, funcs]:

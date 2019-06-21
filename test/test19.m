@@ -1,0 +1,28 @@
+typedef int a1;
+typedef a1 a2;
+typedef a2 a3;
+typedef a3 a4;
+typedef a4 a5;
+typedef a5 a6;
+typedef a6 a7;
+typedef a7 a8;
+typedef a8 a9;
+typedef a9 a10;
+typedef a10 a11;
+typedef a11 a12;
+typedef a12 a13;
+typedef a13 a14;
+typedef a14 a15;
+typedef a15 a16;
+typedef a16 a17;
+typedef a17 a18;
+typedef a18 a19;
+typedef a19 a20;
+typedef a20 a21;
+typedef a21 a22;
+typedef a22 a23;
+typedef a23 a24;
+typedef a24 a25;
+typedef a25 a26;
+
+a26;

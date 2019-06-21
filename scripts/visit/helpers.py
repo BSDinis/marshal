@@ -32,9 +32,6 @@ def network_convert(ast, typ, to_network, name):
                 return '  {l} = ntohs({n});\n'.format(n = name, l = lval)
     return None;
 
-
-
-
 def struct_size(s):
     return ' + '.join(['sizeof({t})'.format(t = m[0]) for m in s['members']])
 
