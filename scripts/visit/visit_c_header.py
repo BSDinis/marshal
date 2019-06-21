@@ -89,7 +89,7 @@ def generate(ast, to_file, namespace):
 
 
     code = includes + defines;
-    for frag in [types, structs, typedefs, funcs]:
+    for frag in [typedefs, types, structs, funcs]:
         if frag:
             for el in frag:
                 code += '\n' + el + '\n'
