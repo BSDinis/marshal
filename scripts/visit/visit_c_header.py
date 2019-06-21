@@ -61,9 +61,9 @@ def gen_funcs(ast, namespace):
             a = arg_list(fun, False)
             funcs.append('\n'.join([
                 '// function {f}'.format(f = name),
-                'uint8_t const {ns}func_{f}_code = {c};'.format(ns = namespace, f = name, c = code + 1),
-                'ssize_t const {ns}func_{f}_sz = {sz};'.format(ns = namespace, f = name, sz = fun_size(ast, fun)),
-                'ssize_t const {ns}resp_{f}_sz = {sz};'.format(ns = namespace, f = name, sz = fun_ret_size(ast, fun)),
+                'static uint8_t const {ns}func_{f}_code = {c};'.format(ns = namespace, f = name, c = code + 1),
+                'static ssize_t const {ns}func_{f}_sz = {sz};'.format(ns = namespace, f = name, sz = fun_size(ast, fun)),
+                'static ssize_t const {ns}resp_{f}_sz = {sz};'.format(ns = namespace, f = name, sz = fun_ret_size(ast, fun)),
                 'typedef int (* {ns}func_{n}_handler_t)(int32_t ticket{args});'.format(ns = namespace, n = name, args = ', ' + a if a else ''),
                 'typedef int (* {ns}resp_{n}_handler_t)(int32_t ticket{r});'.format(ns = namespace, r = ', ' + rett if rett != 'void' else '', n = name),
                 'int {ns}func_{f}_register({ns}func_{f}_handler_t);'.format(ns = namespace, f = name),
