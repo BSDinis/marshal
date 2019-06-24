@@ -219,32 +219,10 @@ ssize_t {ns}func_resp_sz(uint8_t code)
 '''
         return code.format(ns = namespace);
 
-    def resp_parse_exec(ast):
-        code = \
-'''
-int {ns}resp_parse_exec(uint8_t * const resp, ssize_t sz)
-{{
-  if (!resp || sz < 1) return -1;
-  int32_t ticket = -1;
-  uint8_t * ptr = resp;
-  switch (resp[0]) {{
-'''
-
-        for fcode, fun in enumerate(ast['funcs']):
-            code += '    case {c}:\n      return resp_{f}_parse_exec(resp, sz);\n'.format(c = fcode + 1, f = fun['name'])
-        code += \
-'''    default:
-      if (unmarshal_int32_t(&ptr, &sz, &ticket) == -1) return -1;
-      return ticket;
-  }}
-  return 0;
-}}
-'''
-        return code.format(ns = namespace)
     def func_parse_exec(ast):
         code = \
 '''
-int {ns}func_parse_exec(uint8_t * cmd, ssize_t sz)
+int {ns}parse_exec(uint8_t * cmd, ssize_t sz)
 {{
   if (!cmd || sz < 1) return -1;
   int32_t ticket = -1;
@@ -254,6 +232,7 @@ int {ns}func_parse_exec(uint8_t * cmd, ssize_t sz)
 
         for fcode, fun in enumerate(ast['funcs']):
             code += '    case {c}:\n      return func_{f}_parse_exec(cmd, sz);\n'.format(c = fcode + 1, f = fun['name'])
+            code += '    case {c} | (1<<7):\n      return resp_{f}_parse_exec(cmd, sz);\n'.format(c = fcode + 1, f = fun['name'])
         code += \
 '''    default:
       if (unmarshal_int32_t(&ptr, &sz, &ticket) == -1) return -1;
@@ -356,7 +335,7 @@ int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz, int32_t ticket{rarg})
 {{
   if (!cmd || sz < 1) return -1;
 
-  cmd[0] = {cd};
+  cmd[0] = {cd} | (1 << 7);
 
   uint8_t * ptr = cmd + 1;
   sz -= 1;
@@ -416,7 +395,6 @@ int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz, int32_t ticket{aargs})
             '// functions',
             func_resp_sz(ast),
             func_parse_exec(ast),
-            resp_parse_exec(ast),
             ]))
 
         for code, func in enumerate(ast['funcs']):

@@ -56,8 +56,7 @@ def gen_funcs(ast, namespace):
         funcs.append('\n'.join([
             '// function prototypes',
             'ssize_t '+namespace+'func_resp_sz(uint8_t code);',
-            'int '+namespace+'func_parse_exec(uint8_t * cmd, ssize_t);',
-            'int '+namespace+'resp_parse_exec(uint8_t * const resp, ssize_t);'
+            'int '+namespace+'parse_exec(uint8_t * cmd, ssize_t);',
             ]))
         for code, fun in enumerate(ast['funcs']):
             rett = fun['return_t']
