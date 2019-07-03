@@ -5,7 +5,7 @@ test:
 	@cd test; \
 	for f in $$(ls *.m); \
 	do echo "running $$f"; \
-	python3 ../scripts/marshal.py $$f -t; \
+	python3 ../scripts/marshal.py $$f; \
 	clang -Wall -Werror -pedantic -Wno-unused-variable -Wno-unused-function -fdiagnostics-color=always -c $${f%.m}.c -o $${f%.m}.o; \
 	done; \
 	cd ..
