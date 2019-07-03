@@ -32,7 +32,7 @@ def options():
     parser.add_argument('-c', metavar='source.c', nargs='?', default=False, help='generate C source code; optionally generates a specific .c file')
     parser.add_argument('-p', action='store_true', help='generate function prototypes for the C file')
     parser.add_argument('-n', metavar='namespace', nargs=1, default=None, help='prefix all public facing functions with namespace_ ; the default is the name of the file (minus extension)')
-    parser.add_argument('-t', help='generate public marshal and unmarshal funcs for declared types (instead of them being static)')
+    parser.add_argument('-t', action='store_true', help='generate public marshal and unmarshal funcs for declared types (instead of them being static)')
 
     args = parser.parse_args()
     in_files = [open(c, "r") for c in args.code]

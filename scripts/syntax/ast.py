@@ -151,7 +151,10 @@ def make_ast(stmts, print_types):
     for stmt in stmts:
         typename, node = make_node(ast, stmt);
         if typename   == TYPE:
-            add_exported_type(ast, node);
+            if print_types:
+                add_exported_type(ast, node);
+            else:
+                add_private_type(ast, node);
         elif typename == STRUCT:
             ast['structs'].append(node)
         elif typename == TYPEDEF:
