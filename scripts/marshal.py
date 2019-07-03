@@ -32,6 +32,7 @@ def options():
     parser.add_argument('-c', metavar='source.c', nargs='?', default=False, help='generate C source code; optionally generates a specific .c file')
     parser.add_argument('-p', action='store_true', help='generate function prototypes for the C file')
     parser.add_argument('-n', metavar='namespace', nargs=1, default=None, help='prefix all public facing functions with namespace_ ; the default is the name of the file (minus extension)')
+    parser.add_argument('-t', help='generate public marshal and unmarshal funcs for declared types (instead of them being static)')
 
     args = parser.parse_args()
     in_files = [open(c, "r") for c in args.code]
@@ -60,13 +61,13 @@ def options():
     else:
         namespaces = [args.n[0] + '_' for n in args.code];
 
-    return in_files, headers, codes, what_to_print, namespaces
+    return in_files, headers, codes, what_to_print, namespaces, args.t
 
 def main():
     """ main compiler routine """
-    cins, headers, codes, what_to_print, namespaces = options();
+    cins, headers, codes, what_to_print, namespaces, public = options();
     for cin, header, code, namespace in zip(cins, headers, codes, namespaces):
-        astree = ast.make_ast(scanner.scan(cin));
+        astree = ast.make_ast(scanner.scan(cin), public);
         if header:
             if header.name != '<stdout>':
                 print(f'/**\n * {header.name}\n */'+'\n', file=header)

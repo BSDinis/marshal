@@ -44,8 +44,8 @@ def generate(ast, namespace):
 
     mappings = real_types(ast);
 
-    if ast['types']:
-        for typ in ast['types']:
+    if ast['private_types']:
+        for typ in ast['private_types']:
             types.append('// {t}\n'.format(t = typ) + gen_type(typ, mappings))
 
     if ast['structs']:

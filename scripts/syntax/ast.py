@@ -13,12 +13,22 @@ DEFINE  = 5
 
 has_nested_list = lambda x : any(isinstance(i, list) for i in x);
 
-def add_type(ast, t):
+def add_exported_type(ast, t):
     def last_pos(string, char): return [pos for pos, c in enumerate(string) if char == c][-1]
-    ast['types'].add(t)
+    ast['exported_types'].add(t)
+    if t in ast['private_types']:
+        ast['private_types'].remove(t)
+
     real_type = real_types(ast)[t]
     if '[' in real_type:
-        add_type(ast, real_type[:last_pos(real_type, '[')])
+        add_private_type(ast, real_type[:last_pos(real_type, '[')])
+
+def add_private_type(ast, t):
+    def last_pos(string, char): return [pos for pos, c in enumerate(string) if char == c][-1]
+    ast['private_types'].add(t)
+    real_type = real_types(ast)[t]
+    if '[' in real_type:
+        add_private_type(ast, real_type[:last_pos(real_type, '[')])
 
 def make_type(ast, stmt):
     node = ' '.join(stmt)
@@ -128,9 +138,10 @@ def make_node(ast, stmt):
     else:
         return make_type(ast, stmt);
 
-def make_ast(stmts):
+def make_ast(stmts, print_types):
     ast = {
-            'types': {'int32_t'},
+            'exported_types': set(),
+            'private_types': {'int32_t'},
             'structs': list(),
             'funcs': list(),
             'typedefs': list(),
@@ -140,7 +151,7 @@ def make_ast(stmts):
     for stmt in stmts:
         typename, node = make_node(ast, stmt);
         if typename   == TYPE:
-            add_type(ast, node);
+            add_exported_type(ast, node);
         elif typename == STRUCT:
             ast['structs'].append(node)
         elif typename == TYPEDEF:
@@ -158,20 +169,20 @@ def make_ast(stmts):
         for m in s['members']:
             if any(struct['typedef'] == m[0] for struct in ast['structs']):
                 pass
-            elif m[0] not in ast['types']:
-                add_type(ast, m[0])
+            elif m[0] not in ast['private_types'].union(ast['exported_types']) :
+                add_private_type(ast, m[0])
 
     for f in ast['funcs']:
         if f['return_t'] != 'void' and not any(f['return_t'] == s['typedef'] for s in ast['structs']):
-            add_type(ast, f['return_t'])
+            add_private_type(ast, f['return_t'])
 
         for t in f['args']:
             if t[0] != 'void' and not any(t[0] == s['typedef'] for s in ast['structs']):
-                add_type(ast, t[0])
+                add_private_type(ast, t[0])
 
     return ast;
 
 if __name__ == '__main__':
     stmts = scanner.scan(sys.stdin)
-    print(make_ast(stmts))
+    print(make_ast(stmts, True))
     sys.exit(0)

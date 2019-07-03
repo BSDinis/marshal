@@ -77,11 +77,42 @@ def gen_funcs(ast, namespace):
     return funcs;
 
 
+def gen_types(ast):
+    def gen_typename(typename, ref, real_t):
+        typename_u = typename.replace(' ', '_')
+        code = str()
+        variable = str()
+        if ref: variable = '{t} *'.format(t = typename);
+        else:   variable = '{t}'.format(t = typename);
+        code  = 'int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, const {v});\n'.format(t_ = linearize_type(typename), v=variable)
+        if '[' in real_t:
+            code += 'int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t});'.format(t_ = linearize_type(typename), t=gen_type_decl([typename, 'val']))
+        else:
+            code += 'int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} *);'.format(t_ = linearize_type(typename), t=typename)
+        return code
+
+
+    def gen_type(t, mappings):
+        real_t = mappings[t] if t in mappings else t;
+        return gen_typename(t, False, real_t);
+
+    types = list()
+    mappings = real_types(ast);
+    if ast['exported_types']:
+        for typ in ast['exported_types']:
+            types.append('\n'.join([
+                '// {t}'.format(t = typ),
+                gen_type(typ, mappings),
+                ]));
+
+    return types
+
+
 
 def generate(ast, to_file, namespace):
     includes = gen_includes(ast, to_file, namespace);
     defines = gen_defines(ast, to_file, namespace);
-    types = list();
+    types = gen_types(ast);
     structs = gen_structs(ast, namespace);
     typedefs = gen_typedefs(ast, namespace);
     funcs = gen_funcs(ast, namespace);

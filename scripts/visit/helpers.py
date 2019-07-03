@@ -1,6 +1,6 @@
 """ Type helping """
 
-from syntax.ast import add_type
+from syntax.ast import add_private_type
 from utils.typehelpers import real_types
 
 def linearize_type(t):
@@ -61,24 +61,24 @@ def fun_size(ast, f):
     sizes = ['sizeof(uint8_t)', 'sizeof(int32_t)']
     real = real_types(ast)
     for arg in f['args']:
-        if arg[0] in ast['types']:
+        if arg[0] in ast['private_types'].union(ast['exported_types']):
             sizes.append('sizeof('+real_t(arg[0], real)+')')
         elif any(arg[0] == s['typedef'] for s in ast['structs']):
             sizes.append(struct_size(next(s for s in ast['structs'] if arg[0] == s['typedef'])))
         else:
-            add_type(ast, arg[0])
+            add_private_type(ast, arg[0])
             sizes.append('sizeof('+real_t(arg[0], real)+')')
 
     return ' + '.join(sizes);
 
 def fun_ret_size(ast, f):
     sizes = ['sizeof(uint8_t)', 'sizeof(int32_t)']
-    if f['return_t'] in ast['types']:
+    if f['return_t'] in ast['private_types'].union(ast['exported_types']):
         sizes.append('sizeof('+f['return_t']+')')
     elif any(f['return_t'] == s['typedef'] for s in ast['structs']):
         sizes.append(struct_size(next(s for s in ast['structs'] if f['return_t'] == s['typedef'])))
     else:
-        add_type(ast, f['return_t'])
+        add_private_type(ast, f['return_t'])
         sizes.append('sizeof('+f['return_t']+')')
 
     return ' + '.join(sizes);

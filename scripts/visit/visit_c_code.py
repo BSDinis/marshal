@@ -8,11 +8,11 @@ from utils.typehelpers import *;
 
 def gen_types(ast, namespace, mappings):
     def find_last(s, ch): return [p for p, c in enumerate(s) if c == ch][-1];
-    def gen_array_marshal(typename, real_typ):
+    def gen_array_marshal(typename, real_typ, private):
         size = real_typ.split('[')[1].split(']')[0]
         prev_type = real_typ[:find_last(real_typ, '[')]
         code  = \
-'''static int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {param})
+'''{qual}int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {param})
 {{
   for (ssize_t i = 0; i < {sz}; i++) {{
     int ret = marshal_{prev_t}(ptr, rem, val[i]);
@@ -25,14 +25,15 @@ def gen_types(ast, namespace, mappings):
         return code.format(t_ = linearize_type(typename),
                 param = gen_type_decl([typename, 'const val']),
                 sz = size,
-                prev_t = linearize_type(prev_type)
+                prev_t = linearize_type(prev_type),
+                qual = 'static ' if private else ''
                 )
 
-    def gen_array_unmarshal(typename, real_typ):
+    def gen_array_unmarshal(typename, real_typ, private):
         size = real_typ.split('[')[1].split(']')[0]
         prev_type = real_typ[:find_last(real_typ, '[')]
         code  = \
-'''static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {param})
+'''{qual}int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {param})
 {{
   for (ssize_t i = 0; i < {sz}; i++) {{
     int ret = unmarshal_{prev_t}(ptr, rem, {possible}val[i]);
@@ -46,14 +47,15 @@ def gen_types(ast, namespace, mappings):
                 param = gen_type_decl([typename, 'val']),
                 sz = size,
                 prev_t = linearize_type(prev_type),
-                possible = '' if '[' in prev_type else '&'
+                possible = '' if '[' in prev_type else '&',
+                qual = 'static ' if private else ''
                 )
 
 
 
-    def gen_type_marshal(typename, real_typ):
+    def gen_type_marshal(typename, real_typ, private):
         code  = \
-'''static int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const val)
+'''{qual}int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} const val)
 {{
   if (ptr == NULL) return 1;
   if (rem && *rem < sizeof({t})) return -1;
@@ -72,12 +74,12 @@ def gen_types(ast, namespace, mappings):
 
   return 0;
 }}'''
-        return code.format(t_ = linearize_type(typename), t = typename)
+        return code.format(t_ = linearize_type(typename), t = typename, qual = 'static ' if private else '')
 
-    def gen_type_unmarshal(typename, real_typ):
+    def gen_type_unmarshal(typename, real_typ, private):
         typename_u = typename.replace(' ', '_').replace('[', '_').replace(']', '')
         code  = \
-'''static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * const val)
+'''{qual}int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} * const val)
 {{
   if (ptr == NULL) return 1;
   if (rem && *rem < sizeof({t})) return -1;
@@ -94,23 +96,23 @@ def gen_types(ast, namespace, mappings):
 
   return 0;
 }}'''
-        return code.format(t_ = linearize_type(typename), t = typename)
+        return code.format(t_ = linearize_type(typename), t = typename, qual = 'static ' if private else '')
 
 
     types = list();
-    if ast['types']:
-        for typ in ast['types']:
+    if ast['private_types'].union(ast['exported_types']):
+        for typ in ast['private_types'].union(ast['exported_types']):
             if '[' not in mappings[typ]:
                 types.append('\n'.join([
                     '// {t}'.format(t = typ),
-                    gen_type_marshal(typ, mappings[typ]),
-                    gen_type_unmarshal(typ, mappings[typ])
+                    gen_type_marshal(typ, mappings[typ], typ in ast['private_types']),
+                    gen_type_unmarshal(typ, mappings[typ], typ in ast['private_types'])
                     ]))
             else:
                 types.append('\n'.join([
                     '// {t}'.format(t = typ),
-                    gen_array_marshal(typ, mappings[typ]),
-                    gen_array_unmarshal(typ, mappings[typ])
+                    gen_array_marshal(typ, mappings[typ], typ in ast['private_types']),
+                    gen_array_unmarshal(typ, mappings[typ], typ in ast['private_types'])
                     ]))
 
     return types;
@@ -195,7 +197,7 @@ def gen_funcs(ast, namespace):
         def gen_size(t):
             if t == 'void':
                 return ''
-            elif t in ast['types']:
+            elif t in ast['private_types'].union(ast['exported_types']):
                 return ' + sizeof({r})'.format(r = t)
             else:
                 return ' + ' + struct_size(next(s for s in ast['structs'] if s['typedef'] == t))
@@ -345,7 +347,7 @@ int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz, int32_t ticket{rarg})
 '''
             if rett == 'void':
                 pass
-            elif rett in ast['types']:
+            elif rett in ast['private_types'].union(ast['exported_types']):
                 code += '  if (marshal_{typ_}(&ptr, &sz, ret) != 0) return -1;\n'.format(typ_ = linearize_type(rett))
             else:
                 code += '  if (marshal_{typ_}(&ptr, &sz, &ret) != 0) return -1;\n'.format(typ_ = linearize_type(rett))
@@ -374,7 +376,7 @@ int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz, int32_t ticket{aargs})
             for arg in args:
                 if arg[0] == 'void':
                     pass
-                elif arg[0] in ast['types']:
+                elif arg[0] in ast['private_types'].union(ast['exported_types']):
                     code += '  if (marshal_{typ_}(&ptr, &sz, {argname}) != 0) return -1;\n'.format(typ_ = linearize_type(arg[0]), argname = arg[1])
                 else:
                     code += '  if (marshal_{typ_}(&ptr, &sz, &{argname}) != 0) return -1;\n'.format(typ_ = linearize_type(arg[0]), argname = arg[1])
