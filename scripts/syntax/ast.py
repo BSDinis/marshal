@@ -149,7 +149,7 @@ def make_node(ast, stmt, print_types):
 def make_ast(stmts, print_types):
     ast = {
             'exported_types': set(),
-            'private_types': {'int32_t'},
+            'private_types': set(),
             'structs': list(),
             'funcs': list(),
             'typedefs': list(),
@@ -190,6 +190,9 @@ def make_ast(stmts, print_types):
         for t in f['args']:
             if t[0] != 'void' and not any(t[0] == s['typedef'] for s in ast['structs']):
                 add_private_type(ast, t[0])
+
+    if ast['funcs']:
+        add_private_type(ast, 'int32_t')
 
     return ast;
 
