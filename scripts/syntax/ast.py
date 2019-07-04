@@ -44,10 +44,10 @@ def make_typedef(ast, stmt):
     node = {'old': old_type, 'new': new_type}
     return TYPEDEF, node;
 
-def make_struct(ast, stmt):
+def make_struct(ast, stmt, print_types):
     struct = dict();
     offset = 0;
-    struct['public'] = False # FIXME
+    struct['public'] = print_types
     if stmt[0] == 'typedef':
         offset += 1
         if isinstance(stmt[-1], str):
@@ -127,9 +127,9 @@ def make_preprocessor(ast, stmt):
     else:
         raise SyntaxError('invalid preprocessor primitive: ' + stmt)
 
-def make_node(ast, stmt):
+def make_node(ast, stmt, print_types):
     if has_nested_list(stmt):
-        return make_struct(ast, stmt);
+        return make_struct(ast, stmt, print_types);
     elif stmt[0] == '#':
         return make_preprocessor(ast, stmt)
     elif 'typedef' in stmt:
@@ -150,7 +150,7 @@ def make_ast(stmts, print_types):
             'defines': list(),
     };
     for stmt in stmts:
-        typename, node = make_node(ast, stmt);
+        typename, node = make_node(ast, stmt, print_types);
         if typename   == TYPE:
             if print_types:
                 add_exported_type(ast, node);
