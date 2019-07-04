@@ -5,10 +5,10 @@ import lex.scanner
 import syntax.ast
 from visit.helpers import *
 from utils.typehelpers import *
+from visit.type_gen import *;
 
 
 def gen_typename(typename, ref, real_t):
-    typename_u = typename.replace(' ', '_')
     code = str()
     variable = str()
     if ref: variable = '{t} *'.format(t = typename);
@@ -19,10 +19,6 @@ def gen_typename(typename, ref, real_t):
     else:
         code += 'static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} *);'.format(t_ = linearize_type(typename), t=typename)
     return code
-
-def gen_type(t, mappings):
-    real_t = mappings[t] if t in mappings else t;
-    return gen_typename(t, False, real_t);
 
 def gen_struct(s, mappings):
     return gen_typename(s['typedef'], True, s['typedef'])
@@ -37,27 +33,17 @@ def gen_func(f, namespace):
         ])
 
 def generate(ast, namespace):
-    types = list();
-    structs = list();
-    typedefs = list();
-    funcs = list();
-
     mappings = real_types(ast);
+    types = ['\n'.join(
+        ['// {t}'.format(t = typ), gen_private_type_decl(typ, mappings)]
+        ) for typ in ast['private_types']]
+    structs = ['\n'.join(['// {}'.format(s['typedef']), gen_struct_decl(s)])
+            for s in ast['structs']]
 
-    if ast['private_types']:
-        for typ in ast['private_types']:
-            types.append('// {t}\n'.format(t = typ) + gen_type(typ, mappings))
-
-    if ast['structs']:
-        for struct in ast['structs']:
-            structs.append('// {t}\n'.format(t = struct['typedef']) + gen_struct(struct, mappings))
-
-    if ast['funcs']:
-        for func in ast['funcs']:
-            funcs.append(gen_func(func, namespace))
+    funcs = [gen_func(func, namespace) for func in ast['funcs']]
 
     code = str()
-    for frag in [typedefs, types, structs, funcs]:
+    for frag in [list(), types, structs, funcs]:
         if frag:
             for el in frag:
                 code += '\n' + el + '\n'

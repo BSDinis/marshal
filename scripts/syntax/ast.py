@@ -47,6 +47,7 @@ def make_typedef(ast, stmt):
 def make_struct(ast, stmt):
     struct = dict();
     offset = 0;
+    struct['public'] = False # FIXME
     if stmt[0] == 'typedef':
         offset += 1
         if isinstance(stmt[-1], str):

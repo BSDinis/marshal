@@ -5,6 +5,8 @@ import lex.scanner
 import syntax.ast
 from visit.helpers import *;
 
+from visit.type_gen import *;
+
 def gen_includes(ast, to_file, namespace):
     includes = str()
     if ast['includes'] and to_file:
@@ -78,36 +80,13 @@ def gen_funcs(ast, namespace):
 
 
 def gen_types(ast):
-    def gen_typename(typename, ref, real_t):
-        typename_u = typename.replace(' ', '_')
-        code = str()
-        variable = str()
-        if ref: variable = '{t} *'.format(t = typename);
-        else:   variable = '{t}'.format(t = typename);
-        code  = 'int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, const {v});\n'.format(t_ = linearize_type(typename), v=variable)
-        if '[' in real_t:
-            code += 'int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t});'.format(t_ = linearize_type(typename), t=gen_type_decl([typename, 'val']))
-        else:
-            code += 'int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} *);'.format(t_ = linearize_type(typename), t=typename)
-        return code
-
-
-    def gen_type(t, mappings):
-        real_t = mappings[t] if t in mappings else t;
-        return gen_typename(t, False, real_t);
-
-    types = list()
     mappings = real_types(ast);
-    if ast['exported_types']:
-        for typ in ast['exported_types']:
-            types.append('\n'.join([
-                '// {t}'.format(t = typ),
-                gen_type(typ, mappings),
-                ]));
-
-    return types
-
-
+    return ['\n'.join(
+        ['// {}'.format(typ), gen_public_type_decl(typ, mappings)]
+        ) for typ in ast['exported_types']] \
+                +\
+        ['\n'.join(['// {}'.format(s['typedef']), gen_struct_decl(s)])
+            for s in ast['structs'] if s['public']]
 
 def generate(ast, to_file, namespace):
     includes = gen_includes(ast, to_file, namespace);
@@ -119,7 +98,7 @@ def generate(ast, to_file, namespace):
 
 
     code = includes + defines;
-    for frag in [typedefs, types, structs, funcs]:
+    for frag in [typedefs, structs, types, funcs]:
         if frag:
             for el in frag:
                 code += '\n' + el + '\n'
