@@ -73,13 +73,16 @@ def make_struct(ast, stmt, print_types):
         if len(sub_stmt) < 2:
             raise SyntaxError('Should have at least two');
 
-        typename = sub_stmt[0];
+        typename = sub_stmt[0].replace(' ','');
         _names = ''.join(sub_stmt[1:]).split(',')
         for n in _names:
             if '[' in n:
                 base_name, dim = slice_arr_type(n)
             else:
                 base_name, dim = n, ''
+
+            base_name.replace(' ', '');
+            dim.replace(' ', '');
 
             if any(pair[1] == base_name for pair in members):
                 raise SyntaxError('Duplicate member named ' + base_name);
