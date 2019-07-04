@@ -1,5 +1,6 @@
 """ type generation """
 from visit.helpers import *
+from utils.typehelpers import *
 
 def get_prev_arr_type(typename):
     if '[' not in typename:

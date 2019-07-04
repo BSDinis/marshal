@@ -83,10 +83,6 @@ def fun_ret_size(ast, f):
 
     return ' + '.join(sizes);
 
-def slice_arr_type(typ):
-    first_brack = typ.find('[')
-    last_brack = [p for p, c in enumerate(typ) if ']'][-1]
-    return typ[:first_brack], typ[first_brack:last_brack+1]
 
 def gen_type_decl(t_list):
     def find_slice(s):

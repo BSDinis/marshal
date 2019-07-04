@@ -4,7 +4,7 @@ import sys
 import lex.scanner
 import syntax.ast
 from visit.helpers import *;
-
+from utils.typehelpers import *;
 from visit.type_gen import *;
 
 def gen_includes(ast, to_file, namespace):
@@ -32,7 +32,12 @@ def gen_structs(ast, namespace):
             code = '// {t}\n'.format(t = struct['typedef'])
             code += 'typedef struct ' + struct['struct'] + '\n{\n';
             for member in struct['members']:
-                code += '  ' + member[0] + ' ' + member[1] + ';\n';
+                if '[' in member[0]:
+                    base_type, dim = slice_arr_type(member[0])
+                else:
+                    base_type, dim = member[0], ''
+
+                code += '  ' + base_type + ' ' + member[1] + dim + ';\n';
             code += '} ' + struct['typedef'] + ';';
             structs.append(code);
 

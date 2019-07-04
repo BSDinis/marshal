@@ -74,13 +74,17 @@ def make_struct(ast, stmt, print_types):
             raise SyntaxError('Should have at least two');
 
         typename = sub_stmt[0];
-        for name in sub_stmt[1:]:
-            if name == ',':
-                continue
-            if any(pair[1] == name for pair in members):
-                raise SyntaxError('Duplicate member named ' + name);
+        _names = ''.join(sub_stmt[1:]).split(',')
+        for n in _names:
+            if '[' in n:
+                base_name, dim = slice_arr_type(n)
+            else:
+                base_name, dim = n, ''
 
-            members.append((typename, name));
+            if any(pair[1] == base_name for pair in members):
+                raise SyntaxError('Duplicate member named ' + base_name);
+
+            members.append((typename+dim, base_name));
 
     struct['members'] = members;
     return STRUCT, struct;
