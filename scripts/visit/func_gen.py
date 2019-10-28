@@ -36,11 +36,11 @@ ssize_t {ns}func_resp_sz(uint8_t code)
 def func_parse_exec(ast, namespace):
     code = \
 '''
-int {ns}parse_exec(uint8_t * cmd, ssize_t sz)
+int {ns}parse_exec(uint8_t const * cmd, ssize_t sz)
 {{
   if (!cmd || sz < 1) return -1;
   int32_t ticket = -1;
-  uint8_t * ptr = cmd;
+  uint8_t const * ptr = cmd;
   switch (cmd[0]) {{
 '''
 
@@ -67,11 +67,11 @@ def gen_func(ast, namespace, f, fcode):
     def resp_f_parse_exec(f):
         code = \
 '''
-static int resp_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
+static int resp_{f}_parse_exec(uint8_t const * cmd, ssize_t sz)
 {{
   if (!cmd || !resp_{f}_handler || sz < 1) return -1;
 
-  uint8_t * ptr = cmd + 1;
+  uint8_t const * ptr = cmd + 1;
   sz -= 1;
 
   int32_t __ticket = 0;
@@ -95,11 +95,11 @@ static int resp_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
     def func_f_parse_exec(f):
         code = \
 '''
-static int func_{f}_parse_exec(uint8_t *cmd, ssize_t sz)
+static int func_{f}_parse_exec(uint8_t const * cmd, ssize_t sz)
 {{
   if (!cmd || !func_{f}_handler || sz < 1) return -1;
 
-  uint8_t * ptr = cmd + 1;
+  uint8_t const * ptr = cmd + 1;
   sz -= 1;
 
   int32_t __ticket = 0;
@@ -173,7 +173,7 @@ int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz, int32_t ticket{rarg})
     def func_f_marshal(f, fcode):
         code = \
 '''
-int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz, int32_t ticket{aargs})
+int {ns}func_{f}_marshal(uint8_t * cmd, ssize_t sz, int32_t const ticket{aargs})
 {{
   if (!cmd || sz < 1) return -1;
 

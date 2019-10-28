@@ -15,9 +15,9 @@ def gen_typename(typename, ref, real_t):
     else:   variable = '{t}'.format(t = typename);
     code  = 'static int marshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, const {v});\n'.format(t_ = linearize_type(typename), v=variable)
     if '[' in real_t:
-        code += 'static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t});'.format(t_ = linearize_type(typename), t=gen_type_decl([typename, 'val']))
+        code += 'static int unmarshal_{t_}(uint8_t const ** const ptr, ssize_t * const rem, {t});'.format(t_ = linearize_type(typename), t=gen_type_decl([typename, 'val']))
     else:
-        code += 'static int unmarshal_{t_}(uint8_t ** const ptr, ssize_t * const rem, {t} *);'.format(t_ = linearize_type(typename), t=typename)
+        code += 'static int unmarshal_{t_}(uint8_t const ** const ptr, ssize_t * const rem, {t} *);'.format(t_ = linearize_type(typename), t=typename)
     return code
 
 def gen_struct(s, mappings):
@@ -26,8 +26,8 @@ def gen_struct(s, mappings):
 def gen_func(f, namespace):
     return '\n'.join([
         '// function {n}'.format(n = f['name']),
-        'static int func_{n}_parse_exec(uint8_t *cmd , ssize_t);'.format(n = f['name']),
-        'static int resp_{n}_parse_exec(uint8_t *resp, ssize_t);'.format(n = f['name']),
+        'static int func_{n}_parse_exec(uint8_t const * cmd , ssize_t);'.format(n = f['name']),
+        'static int resp_{n}_parse_exec(uint8_t const * resp, ssize_t);'.format(n = f['name']),
         'static {ns}func_{n}_handler_t func_{n}_handler = NULL;'.format(ns = namespace, n = f['name']),
         'static {ns}resp_{n}_handler_t resp_{n}_handler = NULL;'.format(ns = namespace, n = f['name']),
         ])

@@ -65,7 +65,7 @@ def gen_funcs(ast, namespace):
         funcs.append('\n'.join([
             '// function prototypes',
             'ssize_t '+namespace+'func_resp_sz(uint8_t code);',
-            'int '+namespace+'parse_exec(uint8_t * cmd, ssize_t);',
+            'int '+namespace+'parse_exec(uint8_t const * cmd, ssize_t);',
             ]))
         for code, fun in enumerate(ast['funcs']):
             rett = fun['return_t']
@@ -80,8 +80,8 @@ def gen_funcs(ast, namespace):
                 'typedef int (* {ns}resp_{n}_handler_t)(int32_t ticket{r});'.format(ns = namespace, r = ', ' + rett if rett != 'void' else '', n = name),
                 'int {ns}func_{f}_register({ns}func_{f}_handler_t);'.format(ns = namespace, f = name),
                 'int {ns}resp_{f}_register({ns}resp_{f}_handler_t);'.format(ns = namespace, f = name),
-                'int {ns}func_{f}_marshal(uint8_t *, ssize_t sz, int32_t ticket{args});'.format(ns = namespace, f = name, args = ', ' + a if a else ''),
-                'int {ns}resp_{f}_marshal(uint8_t *, ssize_t sz, int32_t ticket{args});'.format(ns = namespace, f = name, args = ', ' + rett if rett != 'void' else ''),
+                'int {ns}func_{f}_marshal(uint8_t *, ssize_t sz, int32_t const ticket{args});'.format(ns = namespace, f = name, args = ', ' + a if a else ''),
+                'int {ns}resp_{f}_marshal(uint8_t *, ssize_t sz, int32_t const ticket{args});'.format(ns = namespace, f = name, args = ', ' + rett if rett != 'void' else ''),
                 ]))
     return funcs;
 

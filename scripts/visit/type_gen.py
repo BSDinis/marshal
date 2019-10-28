@@ -41,7 +41,7 @@ def gen_type_unmarshal_decl(typename, real_typ, is_arr, is_public):
     u_name = linearize_type(typename);
     umvar = gen_var_decl(typename, real_typ, True, False, 'val');
     qualifier = '' if is_public else 'static ';
-    return '{q}int unmarshal_{u}(uint8_t ** const ptr, ssize_t * const rem, {v});\n'.format(\
+    return '{q}int unmarshal_{u}(uint8_t const ** const ptr, ssize_t * const rem, {v});\n'.format(\
             q = qualifier, u = u_name, v = umvar);
 
 def gen_type_decl(typename, real_typ, is_ref, is_arr, is_public):
