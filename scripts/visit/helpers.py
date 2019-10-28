@@ -101,6 +101,6 @@ def gen_type_decl(t_list):
 
 def arg_list(f, full):
     if full:
-        return ', '.join(gen_type_decl(arg) for arg in f['args'])
+        return ', const '.join(gen_type_decl(arg) for arg in f['args'])
     else:
-        return ', '.join(arg[0] for arg in f['args'])
+        return ', const '.join(arg[0] for arg in f['args'])
