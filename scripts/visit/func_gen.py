@@ -16,7 +16,7 @@ def func_resp_sz(ast, namespace):
     resp_sz = ['sizeof(uint8_t)' + gen_size(ast, t) for t in rett];
     code = \
 '''
-ssize_t {ns}func_resp_sz(uint8_t code)
+ssize_t {ns}func_resp_sz(uint8_t const code)
 {{
   switch (code) {{
 '''
@@ -145,7 +145,7 @@ int {ns}func_{f}_register({ns}func_{f}_handler_t handler)
     def resp_f_marshal(f, fcode):
         code = \
 '''
-int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz, int32_t ticket{rarg})
+int {ns}resp_{f}_marshal(uint8_t * cmd, ssize_t sz, int32_t const ticket{rarg})
 {{
   if (!cmd || sz < 1) return -1;
 
