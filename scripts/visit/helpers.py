@@ -29,7 +29,7 @@ def network_convert(ast, typ, to_network, name):
     __tmp = (__high << 32) + __low;
   }}
   {l} = __tmp;'''
-                return code.format(n = name, l = lval).replace('{', '{{').replace('}', '}}')
+                return code.format(n = name, l = lval).replace('{{', '{').replace('}}', '}')
             else:
                 code =  \
 '''  uint64_t __tmp = {n};
@@ -40,17 +40,17 @@ def network_convert(ast, typ, to_network, name):
   }}
   {l} = __tmp;'''
 
-                return code.format(n = name, l = lval).replace('{', '{{').replace('}', '}}')
+                return code.format(n = name, l = lval).replace('{{', '{').replace('}}', '}')
         elif '32' in real_typ or real_typ == 'int':
             if to_network:
-                return '  {l} = htonl({n});\n'.format(n = name, l = lval)
+                return '  {l} = ({orig_type})htonl((uint32_t){n});\n'.format(n = name, l = lval, orig_type = real_typ)
             else:
-                return '  {l} = ntohl({n});\n'.format(n = name, l = lval)
+                return '  {l} = ({orig_type})ntohl((uint32_t){n});\n'.format(n = name, l = lval, orig_type = real_typ)
         elif '16' in real_typ or 'short' in real_typ:
             if to_network:
-                return '  {l} = htons({n});\n'.format(n = name, l = lval)
+                return '  {l} = ({orig_type})htons((uint16_t){n});\n'.format(n = name, l = lval, orig_type = real_typ)
             else:
-                return '  {l} = ntohs({n});\n'.format(n = name, l = lval)
+                return '  {l} = ({orig_type})ntohs((uint16_t){n});\n'.format(n = name, l = lval, orig_type = real_typ)
     return None;
 
 def struct_size(s):
