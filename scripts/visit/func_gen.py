@@ -9,10 +9,10 @@ def gen_size(ast, t):
     elif t in ast['private_types'].union(ast['exported_types']):
         return ' + ssizeof({r})'.format(r = t)
     else:
-        return ' + ' + struct_size(next(s for s in sorted(ast['structs'], key = lambda x: x['struct']) if s['typedef'] == t))
+        return ' + ' + struct_size(next(s for s in ast['structs'] if s['typedef'] == t))
 
 def func_resp_sz(ast, namespace):
-    rett = [f['return_t'] for f in sorted(ast['funcs'], key = lambda x: x['name'])];
+    rett = [f['return_t'] for f in ast['funcs']];
     resp_sz = ['ssizeof(uint8_t)' + gen_size(ast, t) for t in rett];
     code = \
 '''
