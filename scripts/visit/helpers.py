@@ -16,7 +16,7 @@ def network_convert(ast, typ, to_network, name):
     if '*' in name:
         lval = name;
     else:
-        lval = 'int tmp'
+        lval = '{} tmp'.format(real_typ);
 
     if 'int' in real_typ or 'long' in real_typ or 'short' in real_typ:
         if '64' in real_typ or 'long long' in real_typ:
