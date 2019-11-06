@@ -9,10 +9,10 @@ def gen_size(ast, t):
     elif t in ast['private_types'].union(ast['exported_types']):
         return ' + ssizeof({r})'.format(r = t)
     else:
-        return ' + ' + struct_size(next(s for s in ast['structs'] if s['typedef'] == t))
+        return ' + ' + struct_size(next(s for s in sorted(ast['structs'], key = lambda x: x['struct']) if s['typedef'] == t))
 
 def func_resp_sz(ast, namespace):
-    rett = [f['return_t'] for f in ast['funcs']];
+    rett = [f['return_t'] for f in sorted(ast['funcs'], key = lambda x: x['name'])];
     resp_sz = ['ssizeof(uint8_t)' + gen_size(ast, t) for t in rett];
     code = \
 '''
@@ -45,7 +45,7 @@ int {ns}parse_exec(uint8_t const * cmd, ssize_t sz)
     switch (cmd[0]) {{
 '''
 
-    for fcode, fun in enumerate(ast['funcs']):
+    for fcode, fun in enumerate(sorted(ast['funcs'], key = lambda x: x['name'])):
         code += '      case {c}:\n        (void)func_{f}_parse_exec(&cmd, &sz);break;\n'.format(c = fcode + 1, f = fun['name'])
         code += '      case {c} | (1<<7):\n        (void)resp_{f}_parse_exec(&cmd, &sz);break;\n'.format(c = fcode + 1, f = fun['name'])
     code += \

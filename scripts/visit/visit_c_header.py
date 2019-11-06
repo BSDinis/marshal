@@ -11,7 +11,7 @@ def gen_includes(ast, to_file, namespace):
     includes = str()
     if ast['includes'] and to_file:
         includes += '\n'
-        for inc in ast['includes']:
+        for inc in sorted(ast['includes']):
             includes += '#include {f}\n'.format(f = inc)
 
     return includes
@@ -20,7 +20,7 @@ def gen_defines(ast, to_file, namespace):
     defines = str()
     if ast['defines'] and to_file:
       defines += '\n'
-      for d in ast['defines']:
+      for d in sorted(ast['defines']):
         defines += '#ifndef {o}\n'.format(o = (d[0].split('(')[0]))
         defines += '#define {o} {n}\n'.format(o = d[0], n = d[1])
         defines += '#endif\n'
@@ -30,7 +30,7 @@ def gen_defines(ast, to_file, namespace):
 def gen_structs(ast, namespace):
     structs = list();
     if ast['structs']:
-        for struct in ast['structs']:
+        for struct in sorted(ast['structs'], key = lambda x: x['struct']):
             code = '// {t}\n'.format(t = struct['typedef'])
             code += 'typedef struct ' + struct['struct'] + '\n{\n';
             for member in struct['members']:
@@ -67,7 +67,7 @@ def gen_funcs(ast, namespace):
             'ssize_t '+namespace+'func_resp_sz(uint8_t code);',
             'int '+namespace+'parse_exec(uint8_t const * cmd, ssize_t);',
             ]))
-        for code, fun in enumerate(ast['funcs']):
+        for code, fun in enumerate(sorted(ast['funcs'], key = lambda x: x['name'])):
             rett = fun['return_t']
             name = fun['name']
             a = arg_list(fun, False)
@@ -90,10 +90,10 @@ def gen_types(ast):
     mappings = real_types(ast);
     return ['\n'.join(
         ['// {}'.format(typ), gen_public_type_decl(typ, mappings)]
-        ) for typ in ast['exported_types']] \
+        ) for typ in sorted(ast['exported_types'])] \
                 +\
         ['\n'.join(['// {}'.format(s['typedef']), gen_struct_decl(s)])
-            for s in ast['structs'] if s['public']]
+            for s in sorted(ast['structs'], key = lambda x: x['struct']) if s['public']]
 
 def generate(ast, to_file, namespace):
     includes = gen_includes(ast, to_file, namespace);

@@ -13,14 +13,14 @@ def gen_types(ast, namespace, mappings):
             '// {}'.format(typ),
             gen_type_marshal(ast, typ),
             gen_type_unmarshal(ast, typ)])
-            for typ in ast['private_types'].union(ast['exported_types'])]
+            for typ in sorted(ast['private_types'].union(ast['exported_types']))]
 
 def gen_structs(ast):
     return ['\n'.join([
                 '// {t}'.format(t = struct['typedef']),
                 gen_struct_marshal(ast, struct),
                 gen_struct_unmarshal(ast, struct)
-            ]) for struct in ast['structs']]
+            ]) for struct in sorted(ast['structs'], key = lambda x: x['struct'])]
 
 def gen_funcs(ast, namespace):
     funcs = list()
@@ -31,7 +31,7 @@ def gen_funcs(ast, namespace):
             func_parse_exec(ast, namespace),
             ]))
 
-        for code, func in enumerate(ast['funcs']):
+        for code, func in enumerate(sorted(ast['funcs'], key = lambda x: x['name'])):
             funcs.append('\n'.join([
                 '\n\n// function {f}'.format(f = func['name']),
                 gen_func(ast, namespace, func, code + 1)
