@@ -7,13 +7,13 @@ def gen_size(ast, t):
     if t == 'void':
         return ''
     elif t in ast['private_types'].union(ast['exported_types']):
-        return ' + sizeof({r})'.format(r = t)
+        return ' + ssizeof({r})'.format(r = t)
     else:
         return ' + ' + struct_size(next(s for s in ast['structs'] if s['typedef'] == t))
 
 def func_resp_sz(ast, namespace):
     rett = [f['return_t'] for f in ast['funcs']];
-    resp_sz = ['sizeof(uint8_t)' + gen_size(ast, t) for t in rett];
+    resp_sz = ['ssizeof(uint8_t)' + gen_size(ast, t) for t in rett];
     code = \
 '''
 ssize_t {ns}func_resp_sz(uint8_t const code)

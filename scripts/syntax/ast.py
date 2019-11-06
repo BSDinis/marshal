@@ -154,7 +154,7 @@ def make_ast(stmts, print_types):
             'funcs': list(),
             'typedefs': list(),
             'includes': {'<arpa/inet.h>', '<stddef.h>', '<stdint.h>', '<stdlib.h>'},
-            'defines': list(),
+            'defines': [('ssizeof(a)', '(ssize_t)sizeof(a)'),],
     };
     for stmt in stmts:
         typename, node = make_node(ast, stmt, print_types);

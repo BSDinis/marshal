@@ -83,19 +83,19 @@ def gen_type_base_marshal(ast, typename, real_typ, is_public):
     body = \
 '''{{
   if (ptr == NULL) return 1;
-  if (rem && *rem < sizeof({t})) return -1;
+  if (rem && *rem < ssizeof({t})) return -1;
 
 '''
     nconv = network_convert(ast, real_typ, True, 'val')
     if nconv:
         body += nconv.replace('{', '{{').replace('}', '}}')
-        body += '  memcpy(*ptr, &tmp, sizeof({t}));\n'
+        body += '  memcpy(*ptr, &tmp, ssizeof({t}));\n'
     else:
-        body += '  memcpy(*ptr, &val, sizeof({t}));\n'
+        body += '  memcpy(*ptr, &val, ssizeof({t}));\n'
     body  += \
 '''
-  *ptr += sizeof({t});
-  if (rem) *rem -= sizeof({t});
+  *ptr += ssizeof({t});
+  if (rem) *rem -= ssizeof({t});
 
   return 0;
 }}'''
@@ -109,7 +109,7 @@ def gen_type_array_marshal(ast, typename, real_typ, is_public):
     body = \
 '''{{
   if (ptr == NULL) return 1;
-  if (rem && *rem < sizeof({t})) return -1;
+  if (rem && *rem < ssizeof({t})) return -1;
 
   for (ssize_t i = 0; i < {sz}; i++) {{
     int ret = marshal_{prev_t}(ptr, rem, val[i]);
@@ -137,17 +137,17 @@ def gen_type_base_unmarshal(ast, typename, real_typ, is_public):
     body = \
 '''{{
   if (ptr == NULL) return 1;
-  if (rem && *rem < sizeof({t})) return -1;
+  if (rem && *rem < ssizeof({t})) return -1;
 
-  memcpy(val, *ptr, sizeof({t}));
+  memcpy(val, *ptr, ssizeof({t}));
 '''
     nconv = network_convert(ast, real_typ, False, '*val')
     if nconv:
         body += nconv.replace('{', '{{').replace('}', '}}')
     body  += \
 '''
-  *ptr += sizeof({t});
-  if (rem) *rem -= sizeof({t});
+  *ptr += ssizeof({t});
+  if (rem) *rem -= ssizeof({t});
 
   return 0;
 }}'''
@@ -161,7 +161,7 @@ def gen_type_array_unmarshal(ast, typename, real_typ, is_public):
     body = \
 '''{{
   if (ptr == NULL) return 1;
-  if (rem && *rem < sizeof({t})) return -1;
+  if (rem && *rem < ssizeof({t})) return -1;
 
   for (ssize_t i = 0; i < {sz}; i++) {{
     int ret = unmarshal_{prev_t}(ptr, rem, {maybe}val[i]);
@@ -177,7 +177,7 @@ def gen_type_array_unmarshal(ast, typename, real_typ, is_public):
 def gen_struct_marshal(ast, s):
     typename = s['typedef']
     typename_u = typename.replace(' ', '_')
-    sz_decl = 'ssize_t const sz = ' + ' + '.join(['sizeof(' + m[0] + ')' for m in s['members']])
+    sz_decl = 'ssize_t const sz = ' + ' + '.join(['ssizeof(' + m[0] + ')' for m in s['members']])
     header = gen_struct_decl(s).split(';')[0]
     code = \
 '''
@@ -210,7 +210,7 @@ def gen_struct_unmarshal(ast, s):
     mappings = real_types(ast);
     typename = s['typedef']
     typename_u = typename.replace(' ', '_')
-    sz_decl = 'const ssize_t sz = ' + ' + '.join(['sizeof(' + m[0] + ')'  for m in s['members']])
+    sz_decl = 'const ssize_t sz = ' + ' + '.join(['ssizeof(' + m[0] + ')'  for m in s['members']])
     header = gen_struct_decl(s).replace('\n','').split(';')[1]+'\n'
     code = \
 '''

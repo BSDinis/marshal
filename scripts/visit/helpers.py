@@ -54,32 +54,32 @@ def network_convert(ast, typ, to_network, name):
     return None;
 
 def struct_size(s):
-    return ' + '.join(['sizeof({t})'.format(t = m[0]) for m in s['members']])
+    return ' + '.join(['ssizeof({t})'.format(t = m[0]) for m in s['members']])
 
 def fun_size(ast, f):
     def real_t(t, real): return real[t] if t in real else t;
-    sizes = ['sizeof(uint8_t)', 'sizeof(int32_t)']
+    sizes = ['ssizeof(uint8_t)', 'ssizeof(int32_t)']
     real = real_types(ast)
     for arg in f['args']:
         if arg[0] in ast['private_types'].union(ast['exported_types']):
-            sizes.append('sizeof('+real_t(arg[0], real)+')')
+            sizes.append('ssizeof('+real_t(arg[0], real)+')')
         elif any(arg[0] == s['typedef'] for s in ast['structs']):
             sizes.append(struct_size(next(s for s in ast['structs'] if arg[0] == s['typedef'])))
         else:
             add_private_type(ast, arg[0])
-            sizes.append('sizeof('+real_t(arg[0], real)+')')
+            sizes.append('ssizeof('+real_t(arg[0], real)+')')
 
     return ' + '.join(sizes);
 
 def fun_ret_size(ast, f):
-    sizes = ['sizeof(uint8_t)', 'sizeof(int32_t)']
+    sizes = ['ssizeof(uint8_t)', 'ssizeof(int32_t)']
     if f['return_t'] in ast['private_types'].union(ast['exported_types']):
-        sizes.append('sizeof('+f['return_t']+')')
+        sizes.append('ssizeof('+f['return_t']+')')
     elif any(f['return_t'] == s['typedef'] for s in ast['structs']):
         sizes.append(struct_size(next(s for s in ast['structs'] if f['return_t'] == s['typedef'])))
     else:
         add_private_type(ast, f['return_t'])
-        sizes.append('sizeof('+f['return_t']+')')
+        sizes.append('ssizeof('+f['return_t']+')')
 
     return ' + '.join(sizes);
 

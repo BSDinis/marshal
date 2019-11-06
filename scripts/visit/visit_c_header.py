@@ -19,11 +19,11 @@ def gen_includes(ast, to_file, namespace):
 def gen_defines(ast, to_file, namespace):
     defines = str()
     if ast['defines'] and to_file:
-        defines += '\n'
-        for d in ast['defines']:
-           defines += '#ifndef {o}\n'.format(o = d[0], n = d[1])
-           defines += '#define {o} {n}\n'.format(o = d[0], n = d[1])
-           defines += '#endif\n'.format(o = d[0], n = d[1])
+      defines += '\n'
+      for d in ast['defines']:
+        defines += '#ifndef {o}\n'.format(o = (d[0].split('(')[0]))
+        defines += '#define {o} {n}\n'.format(o = d[0], n = d[1])
+        defines += '#endif\n'
 
     return defines
 
