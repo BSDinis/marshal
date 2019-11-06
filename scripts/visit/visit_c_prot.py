@@ -38,9 +38,9 @@ def generate(ast, namespace):
         ['// {t}'.format(t = typ), gen_private_type_decl(typ, mappings)]
         ) for typ in sorted(ast['private_types'])]
     structs = ['\n'.join(['// {}'.format(s['typedef']), gen_struct_decl(s)])
-            for s in sorted(ast['structs'], key = lambda x: x['struct'])]
+            for s in ast['structs']]
 
-    funcs = [gen_func(func, namespace) for func in sorted(ast['funcs'], key = lambda x: x['name'])]
+    funcs = [gen_func(func, namespace) for func in ast['funcs']]
 
     code = str()
     for frag in [list(), types, structs, funcs]:

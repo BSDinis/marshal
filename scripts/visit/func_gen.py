@@ -45,7 +45,7 @@ int {ns}parse_exec(uint8_t const * cmd, ssize_t sz)
     switch (cmd[0]) {{
 '''
 
-    for fcode, fun in enumerate(sorted(ast['funcs'], key = lambda x: x['name'])):
+    for fcode, fun in enumerate(ast['funcs']):
         code += '      case {c}:\n        (void)func_{f}_parse_exec(&cmd, &sz);break;\n'.format(c = fcode + 1, f = fun['name'])
         code += '      case {c} | (1<<7):\n        (void)resp_{f}_parse_exec(&cmd, &sz);break;\n'.format(c = fcode + 1, f = fun['name'])
     code += \

@@ -20,7 +20,7 @@ def gen_structs(ast):
                 '// {t}'.format(t = struct['typedef']),
                 gen_struct_marshal(ast, struct),
                 gen_struct_unmarshal(ast, struct)
-            ]) for struct in sorted(ast['structs'], key = lambda x: x['struct'])]
+            ]) for struct in ast['structs']]
 
 def gen_funcs(ast, namespace):
     funcs = list()
@@ -31,7 +31,7 @@ def gen_funcs(ast, namespace):
             func_parse_exec(ast, namespace),
             ]))
 
-        for code, func in enumerate(sorted(ast['funcs'], key = lambda x: x['name'])):
+        for code, func in enumerate(ast['funcs']):
             funcs.append('\n'.join([
                 '\n\n// function {f}'.format(f = func['name']),
                 gen_func(ast, namespace, func, code + 1)
