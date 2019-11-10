@@ -32,6 +32,8 @@ def gen_structs(ast, namespace):
     if ast['structs']:
         for struct in ast['structs']:
             code = '// {t}\n'.format(t = struct['typedef'])
+            code += '#ifndef _struct_{}_definition_\n'.format(struct['typedef']);
+            code += '#define _struct_{}_definition_\n'.format(struct['typedef']);
             code += 'typedef struct ' + struct['struct'] + '\n{\n';
             for member in struct['members']:
                 if '[' in member[0]:
@@ -40,7 +42,8 @@ def gen_structs(ast, namespace):
                     base_type, dim = member[0], ''
 
                 code += '  ' + base_type + ' ' + member[1] + dim + ';\n';
-            code += '} ' + struct['typedef'] + ';';
+            code += '} ' + struct['typedef'] + ';\n';
+            code += '#endif // _struct_{}_definition_'.format(struct['typedef']);
             structs.append(code);
 
     return structs;
