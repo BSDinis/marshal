@@ -1,5 +1,20 @@
 """ Type helping """
 
+def gen_struct_size(ast, s):
+    def real_t(t, real):return real[t] if t in real else t;
+    sizes = list()
+    real = real_types(ast)
+    for arg in s['members']:
+        if arg[0] in ast['private_types'].union(ast['exported_types']):
+            sizes.append('ssizeof('+real_t(arg[0], real)+')')
+        elif any(arg[0] == s['typedef'] for s in ast['structs']):
+            sizes.append(gen_struct_size(ast, next(s for s in ast['structs'] if arg[0] == s['typedef'])))
+        else:
+            add_private_type(ast, arg[0])
+            sizes.append('ssizeof('+real_t(arg[0], real)+')')
+
+    return ' + '.join(sizes)
+
 def real_types(ast):
     def find_base(mappings, t):
         while t in mappings:

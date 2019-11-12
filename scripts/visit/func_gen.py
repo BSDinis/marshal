@@ -9,7 +9,7 @@ def gen_size(ast, t):
     elif t in ast['private_types'].union(ast['exported_types']):
         return ' + ssizeof({r})'.format(r = t)
     else:
-        return ' + ' + struct_size(next(s for s in ast['structs'] if s['typedef'] == t))
+        return ' + ' + gen_struct_size(ast, next(s for s in ast['structs'] if s['typedef'] == t))
 
 def func_resp_sz(ast, namespace):
     rett = [f['return_t'] for f in ast['funcs']];
@@ -41,7 +41,6 @@ int {ns}parse_exec(uint8_t const * cmd, ssize_t sz)
   if (!cmd || sz < 1) return -1;
   int32_t ticket = -1;
   do {{
-    uint8_t const * ptr = cmd;
     switch (cmd[0]) {{
 '''
 
@@ -50,10 +49,10 @@ int {ns}parse_exec(uint8_t const * cmd, ssize_t sz)
         code += '      case {c} | (1<<7):\n        (void)resp_{f}_parse_exec(&cmd, &sz);break;\n'.format(c = fcode + 1, f = fun['name'])
     code += \
 '''      default:
-      if (unmarshal_int32_t(&ptr, &sz, &ticket) == -1) return -1;
-      return ticket;
+        if (unmarshal_int32_t(&cmd, &sz, &ticket) == -1) return -1;
+        return ticket;
     }}
-  }} while (sz > 1);
+  }} while (sz > ssizeof(int32_t));
   return 0;
 }}
 '''

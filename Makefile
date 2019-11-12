@@ -23,7 +23,7 @@ build: marshal
 install: marshal
 	cp marshal ${BIN_DEST}
 
-marshal: scripts/marshal.py scripts/syntax/ast.py scripts/lex/scanner.py scripts/visit/visit_c_header.py scripts/visit/helpers.py scripts/visit/visit_c_code.py scripts/visit/visit_c_prot.py
+marshal: scripts/*/*.py
 	pyinstaller --onefile scripts/marshal.py
 	cp dist/marshal .
 
