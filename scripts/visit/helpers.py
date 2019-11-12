@@ -1,7 +1,7 @@
 """ Type helping """
 
 from syntax.ast import add_private_type
-from utils.typehelpers import real_types
+from utils.typehelpers import real_types, gen_struct_size
 
 def linearize_type(t):
     return t.replace(' ', '_').replace('[', '_').replace(']', '')
@@ -53,9 +53,6 @@ def network_convert(ast, typ, to_network, name):
                 return '  {l} = ({orig_type})ntohs((uint16_t){n});\n'.format(n = name, l = lval, orig_type = real_typ)
     return None;
 
-def struct_size(s):
-    return ' + '.join(['ssizeof({t})'.format(t = m[0]) for m in s['members']])
-
 def fun_size(ast, f):
     def real_t(t, real): return real[t] if t in real else t;
     sizes = ['ssizeof(uint8_t)', 'ssizeof(int32_t)']
@@ -64,7 +61,7 @@ def fun_size(ast, f):
         if arg[0] in ast['private_types'].union(ast['exported_types']):
             sizes.append('ssizeof('+real_t(arg[0], real)+')')
         elif any(arg[0] == s['typedef'] for s in ast['structs']):
-            sizes.append(struct_size(next(s for s in ast['structs'] if arg[0] == s['typedef'])))
+            sizes.append(gen_struct_size(ast, next(s for s in ast['structs'] if arg[0] == s['typedef'])))
         else:
             add_private_type(ast, arg[0])
             sizes.append('ssizeof('+real_t(arg[0], real)+')')
@@ -76,7 +73,7 @@ def fun_ret_size(ast, f):
     if f['return_t'] in ast['private_types'].union(ast['exported_types']):
         sizes.append('ssizeof('+f['return_t']+')')
     elif any(f['return_t'] == s['typedef'] for s in ast['structs']):
-        sizes.append(struct_size(next(s for s in ast['structs'] if f['return_t'] == s['typedef'])))
+        sizes.append(gen_struct_size(ast, next(s for s in ast['structs'] if f['return_t'] == s['typedef'])))
     else:
         add_private_type(ast, f['return_t'])
         sizes.append('ssizeof('+f['return_t']+')')

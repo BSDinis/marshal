@@ -26,8 +26,8 @@ def gen_struct(s, mappings):
 def gen_func(f, namespace):
     return '\n'.join([
         '// function {n}'.format(n = f['name']),
-        'static int func_{n}_parse_exec(uint8_t const * cmd , ssize_t);'.format(n = f['name']),
-        'static int resp_{n}_parse_exec(uint8_t const * resp, ssize_t);'.format(n = f['name']),
+        'static int func_{n}_parse_exec(uint8_t const ** cmd , ssize_t *);'.format(n = f['name']),
+        'static int resp_{n}_parse_exec(uint8_t const ** resp, ssize_t *);'.format(n = f['name']),
         'static {ns}func_{n}_handler_t func_{n}_handler = NULL;'.format(ns = namespace, n = f['name']),
         'static {ns}resp_{n}_handler_t resp_{n}_handler = NULL;'.format(ns = namespace, n = f['name']),
         ])
@@ -36,7 +36,7 @@ def generate(ast, namespace):
     mappings = real_types(ast);
     types = ['\n'.join(
         ['// {t}'.format(t = typ), gen_private_type_decl(typ, mappings)]
-        ) for typ in ast['private_types']]
+        ) for typ in sorted(ast['private_types'])]
     structs = ['\n'.join(['// {}'.format(s['typedef']), gen_struct_decl(s)])
             for s in ast['structs']]
 

@@ -13,7 +13,7 @@ def gen_types(ast, namespace, mappings):
             '// {}'.format(typ),
             gen_type_marshal(ast, typ),
             gen_type_unmarshal(ast, typ)])
-            for typ in ast['private_types'].union(ast['exported_types'])]
+            for typ in sorted(ast['private_types'].union(ast['exported_types']))]
 
 def gen_structs(ast):
     return ['\n'.join([

@@ -175,9 +175,10 @@ def gen_type_array_unmarshal(ast, typename, real_typ, is_public):
 
 
 def gen_struct_marshal(ast, s):
+
     typename = s['typedef']
     typename_u = typename.replace(' ', '_')
-    sz_decl = 'ssize_t const sz = ' + ' + '.join(['ssizeof(' + m[0] + ')' for m in s['members']])
+    sz_decl = 'ssize_t const sz = ' + gen_struct_size(ast, s);
     header = gen_struct_decl(s).split(';')[0]
     code = \
 '''
@@ -199,8 +200,6 @@ def gen_struct_marshal(ast, s):
 
     code += \
 '''
-  *ptr += sz;
-  if (rem) *rem -= sz;
   return 0;
 }}'''
     return header + code.format(t_ = typename_u, t = typename, szdecl = sz_decl)
@@ -210,7 +209,7 @@ def gen_struct_unmarshal(ast, s):
     mappings = real_types(ast);
     typename = s['typedef']
     typename_u = typename.replace(' ', '_')
-    sz_decl = 'const ssize_t sz = ' + ' + '.join(['ssizeof(' + m[0] + ')'  for m in s['members']])
+    sz_decl = 'ssize_t const sz = ' + gen_struct_size(ast, s);
     header = gen_struct_decl(s).replace('\n','').split(';')[1]+'\n'
     code = \
 '''
@@ -233,8 +232,6 @@ def gen_struct_unmarshal(ast, s):
 
     code += \
 '''
-  *ptr += sz;
-  if (rem) *rem -= sz;
   return 0;
 }}'''
     return header + code.format(t_ = typename_u, t = typename, szdecl = sz_decl)
